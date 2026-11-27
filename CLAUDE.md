@@ -132,7 +132,7 @@ engine-web 是 Peck、Pith、Pomelo 共用的网页引擎（独立 Rust 库）�
 
 ## 六、本引擎自己的
 
-- **依赖**：HTML 用 `dom_smoothie`（Readability 的移植，Peck、Pomelo 在用）和 `dom_query`（同一套 html5ever 解析，转 Markdown 用）；编码用 `encoding_rs`；HTTP 用同步的 `ureq` 3 加系统 TLS（和 engine-pdf 一样），走 `Transport` 抽象；网址用 `url`。不引异步运行时。计划中的依赖和许可证见 `THIRD_PARTY.md`。
+- **依赖**：HTML 用 `dom_smoothie`（Readability 的移植，Peck、Pomelo 在用）和 `dom_query`（同一套 html5ever 解析，转 Markdown 用）；编码用 `encoding_rs`；HTTP 用同步的 `ureq` 3（Mac 上系统 TLS，和 engine-pdf 一样；别的平台 rustls），走 `Transport` 抽象（`docs/decisions/0006`）；网址用 `url`。不引异步运行时。计划中的依赖和许可证见 `THIRD_PARTY.md`。
 - **几乎没有 Mac 专属的部分**：取正文、抓取、Tavily 都是纯 Rust，Linux 上能编、能测。
   - **云端 Claude 能做的**：`ROADMAP.md` 里标「云端」的 Phase，包括合成样本、取正文、抓取、Tavily 客户端和模拟服务、工具包、find、站点规则的代码。在 `cloud/v<主>.<次>` 分支上做，只推这条分支。
   - **只在本机做的**：真实网页的批量核对（快照只放 `local/`）、真跑 Tavily（花钱、要密钥）、接进 App（在 App 的仓库里）、合并和发版。

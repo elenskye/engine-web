@@ -1,6 +1,6 @@
 # ROADMAP
 
-现在：**v0.3.0 抓取和搜索**，站主定在本机做（2026-11-27）。Phase 计划见下面「v0.3.0」。上一版 v0.2.0 已发（tag `v0.2.0`）。
+现在：**v0.3.0 已发**（tag `v0.3.0`，2026-11-27）：取正文、抓取、Tavily 搜索，六个工具。下一步 **v0.4.0 接 Peck**（在 Peck 的仓库里做，程度到时问站主）。
 
 分工见 `CLAUDE.md`「二」和 `docs/decisions/0001`：云端 Claude 做标「云端」的 Phase（在 `cloud/v<主>.<次>` 分支上），本机做标「本机」的；本机 Claude 审核、合并、commit、打 tag。
 
@@ -10,8 +10,8 @@
 | --- | --- | --- | --- |
 | v0.1.0 | 计划、设计稿、骨架 | 本机 | 完成（没打 tag） |
 | v0.2.0 | **取正文**：字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别、类型判断、「可能要开 JavaScript」提示、`article` / `full` 两种模式；`web_extract`、`web_find`；工具包和命令行 | 云端为主 | **已发**（2026-11-27） |
-| v0.3.0 | **抓取和搜索**：`web_fetch`（跳转、超时、大小上限、内网检查、解压 gzip / br）；Tavily 的搜索、取页、爬站、站内地图（`web_search`、`web_crawl`、`web_map`）；报价和 `Usage`；模拟服务 | 本机（站主 2026-11-27 定） | 在做 |
-| v0.4.0 | 接 Peck：`harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily | 本机（Peck 仓库） | 大纲 |
+| v0.3.0 | **抓取和搜索**：`web_fetch`（跳转、超时、大小上限、内网检查、解压 gzip / br）；Tavily 的搜索、取页、爬站、站内地图（`web_search`、`web_crawl`、`web_map`）；报价和 `Usage`；模拟服务 | 本机（站主 2026-11-27 定） | **已发**（2026-11-27） |
+| v0.4.0 | 接 Peck：`harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily | 本机（Peck 仓库） | 下一步 |
 | v0.5.0 | 站点规则（知网文献页、arXiv 摘要页、维基百科、GitHub 的 README 和 issue）、文章里的图、多页文章合并 | 云端为主，真实页核对在本机 | 大纲 |
 | v0.6.0 | 接 Pomelo：`youzi/files.rs::fetch_page`、`youzi/office.rs::web_article`、`youzi/skills/web.rs`、`pub2md/search.rs` | 本机（Pomelo 仓库） | 大纲 |
 | v0.7.0 | 接 Pith：`research/download.rs` 的抓取、`research/content.rs` 的网页取字、`research/tavily.rs` | 本机（Pith 仓库） | 大纲 |
@@ -19,17 +19,15 @@
 
 每一版都是「新增功能」：分 Phase，只在最后一个 Phase 收尾时打 tag。App 接入是 App 自己的一个版本，程度到时问站主；同一个 App 一次只接一个引擎。
 
-## v0.3.0 抓取和搜索（在做，本机）
+## v0.3.0 抓取和搜索（已发，本机）
 
-设计见 `docs/design.md` §1、§2、§3、§5。全部在本机做（站主定），不开 `cloud/v0.3`。
-
-| Phase | 做什么 | 做完的样子 |
-| --- | --- | --- |
-| 1 抓取 | `Transport`（发一个请求、不跟跳转；查主机地址）；默认的 ureq 实现：系统 TLS、自动解压 gzip / br、只连检查过的地址（防 DNS 重绑定）、收到上限就停、逐块查取消；`fetch`：网址检查（http(s)、不带用户名密码、有主机）、内网检查（名字、IP、解析出的每个地址）、自己跟跳转（最多 5 次，默认只跟同一个网站，跳到别的网站交回新网址；跟到别的网站时不带 Cookie）、超时和大小上限（App 只能在引擎的上限内改）；`HostPacer`（同一站点的间隔，App 持有）；feature `fake` 的 `FakeTransport`；Peck、Pith 抓取的测试搬过来 | 模拟服务上跳转、内网、大小、取消、类型都有测试；本机起一个 HTTP 服务测 ureq 那条路（解压、钉地址、截断） |
-| 2 Tavily | 搜索、取页、爬站、站内地图四个接口：工具参数翻成 Tavily 的字段、结果读回来、`include_usage` 按回复的点数记、没有就按价目估并标 `estimated`；本地报价（对着官方文档的计点规则）；出错按种类分（401/403、432/433、429、400/422、5xx），429 和 5xx 按 `Retry-After` 重试最多 3 次、等待中可取消；服务原文不给人看、不带密钥 | 模拟服务上四个接口、报价、重试、各种出错都有测试 |
-| 3 工具包 | `tools/web_fetch.json`、`web_search.json`、`web_crawl.json`、`web_map.json`；`web_find` 可以只给 `url` 现抓；`toolkit_with(设置)`（抓取设置、`Transport`、Tavily 网址），`toolkit()` 用默认设置；`docs/toolkit.md` 补完 | 清单过 engine-core 的自检，例子都跑通（用模拟服务）；命令行 `call web_search` 不加 `--yes` 只报价 |
-| 4 真实核对 | `web_fetch` 抓 `docs/real-pages.txt` 里的网址（免费）；真跑 Tavily 四个接口各一两次（上限 $1，用站主的密钥） | 结果和花费写进 `HANDOFF.md` |
-| 5 收尾 | README、`CHANGELOG.md`、`HANDOFF.md`；`./scripts/check.sh`（加 `--features fake`） | 检查过；打 tag `v0.3.0` |
+| Phase | 结果 |
+| --- | --- |
+| 1 抓取 | `Transport` + 默认的 `Ureq`（系统 TLS、解压、钉地址、截断、逐块查取消）；`fetch`（网址、内网、跳转、同站、上限、`HostPacer`）；feature `fake` 的 `Fake`；`decisions/0006` |
+| 2 Tavily | 四个接口、本地报价（照官方计点规则）、按回复记点数、出错分类、可取消的重试；`decisions/0007` |
+| 3 工具包 | `web_fetch`、`web_search`、`web_crawl`、`web_map` 四份新清单；`web_find` 可只给网址；`toolkit_with(Web)` |
+| 4 真实核对 | 本机抓 72 个网址（58 个读到，没读到的是网站挡、要登录、要开 JavaScript、证书不对）；查出 2 处（react.dev 回 MDX 源文件被认成网页、https 降成 http 的说明不对）已修。真跑 Tavily 四个接口约 6 点（$0.05） |
+| 5 收尾 | 文档；`./scripts/check.sh` 两种配置都过；打 tag |
 
 ## v0.2.0 取正文（已发）
 
@@ -54,5 +52,5 @@
 要站主亲自看、亲自做的，不挡开发：
 
 - [ ] v0.2.0：把几份常看的网页存下来（浏览器的「存储为…」，格式选网页源码，不要网页归档），在本仓库目录的终端里跑 `cargo run -q --bin engine-web -- call web_extract '{"file":"<路径>","url":"<网址>"}'`，看正文对不对、有没有把导航和广告当正文；再把 `web_extract` 换成 `web_find`、加 `"query":"<文章里的一句话>"`，看找到的段落对不对。本机已核对过的 63 页的结果在 `local/out/`（每页一个 `.article.md`），也可以直接翻。
-- [ ] v0.3.0：`engine-web call web_search` 搜一个问题，结果和花费对；爬站不加 `--yes` 只报价。
+- [ ] v0.3.0：在本仓库目录跑 `cargo run -q --bin engine-web -- call web_fetch '{"url":"<常看的网页>"}'`，看正文对不对；再跑 `ENGINE_KEY_TAVILY="$(cat ~/Documents/Dataset/Pomelo/key/tavily)" cargo run -q --bin engine-web -- call web_search '{"query":"<一个问题>"}' --yes`，看结果和 `usage` 里的花费；爬站 `web_crawl` 不加 `--yes` 应当只报价。
 - [ ] v0.4.0：Peck 正式版里让模型搜一次、读一页，引用的网址对；内网地址被拒。
