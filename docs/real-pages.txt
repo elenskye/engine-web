@@ -1,0 +1,49 @@
+# Phase 3 真实网页核对用的网址（2026-11-27 云端抓的）。只存网址，网页快照放 local/pages/，不进 Git。
+# 用法：cp docs/real-pages.txt local/pages/urls.txt && ./scripts/snapshot.sh && cargo run --release --example pages
+# GitHub（本会话能读的只有 engine-web 自己）
+https://github.com/elenskye/engine-web
+https://github.com/elenskye/engine-web/blob/main/README.md
+https://github.com/elenskye/engine-web/blob/cloud/v0.2/docs/design.md
+https://github.com/elenskye/engine-web/blob/cloud/v0.2/docs/decisions/0005-encoding-detection.md
+https://github.com/elenskye/engine-web/tree/cloud/v0.2/docs
+https://github.com/elenskye/engine-web/commits/cloud/v0.2
+https://github.com/elenskye/engine-web/blob/cloud/v0.2/src/html.rs
+https://raw.githubusercontent.com/elenskye/engine-web/cloud/v0.2/README.md
+# X
+https://x.com/rustlang
+https://x.com/jack/status/20
+# 知网和同类网站
+https://oversea.cnki.net/
+https://oversea.cnki.net/index/
+https://scjg.cnki.net/kcms/detail/detail.aspx?dbcode=CFJD&dbname=CFJD2021&filename=RMLT202115024&v=
+https://kns.cnki.net/kns8s/defaultresult/index?kw=%E9%9D%92%E5%B9%B4%E5%A4%B1%E4%B8%9A
+https://www.wanfangdata.com.cn/
+https://sns.wanfangdata.com.cn/perio/shxyj
+https://edu.wanfangdata.com.cn/Magazine/Detail/snetyj
+https://www.cqvip.com/
+# 大数据、统计
+https://www.europeansocialsurvey.org/
+https://www.europeansocialsurvey.org/news/article/final-release-round-11-data
+https://www.europeansocialsurvey.org/data-portal?round=all&page=2
+https://ess.sikt.no/en/study/412db4fe-c77a-4e98-8ea4-6c19007f551b/
+https://www.stats.gov.cn/sj/zxfb/
+https://www.stats.gov.cn/sj/zxfb/202611/t20261127_1965949.html
+https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
+https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Population_and_population_change_statistics
+# 百科、论文
+https://en.wikipedia.org/wiki/European_Social_Survey
+https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%9B%BD%E7%9F%A5%E7%BD%91
+https://arxiv.org/abs/1706.03762
+# 新闻、政府文件
+https://www.bbc.com/news/articles/c820q9wgrpyyo
+https://www.news.cn/world/20261124/d0aacb0a80a14e2a99dfd02a2fe94c66/c.html
+https://finance.people.com.cn/n1/2026/1127/c1004-40841227.html
+https://www.gov.cn/zhengce/content/202611/content_7085661.htm
+# 文档、博客
+https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html
+https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/
+https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+https://docs.python.org/3/library/json.html
+https://www.ruanyifeng.com/blog/
+# 知网文献页（海外访问会跳到验证码页）
+https://oversea.cnki.net/kcms/detail/detail.aspx?dbcode=CJFD&filename=RMLT202115024

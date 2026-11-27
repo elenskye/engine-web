@@ -113,11 +113,15 @@ pub trait Transport { fn send(&self, req: Request) -> Result<Response, Transport
 ## 4. 取正文
 
 - **以 Peck 那套为底**（`src/html.rs`）：`dom_smoothie` 抽正文转 Markdown；不到 `min_article_chars`（默认 200 字）就退回整个 `<body>`，去掉脚本、样式、导航、页脚、侧栏、表单、iframe；`tidy_markdown`：链接改成绝对网址，图片只留说明（v0.5 起另把图的网址和说明列进 `images`），连续空行收成一个；`needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
-  - 和 Peck 的差别：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）先去掉再抽正文；只把真有协议的网址当绝对网址（Peck 把 `/wiki/Help:Contents` 这种路径里带 `:` 的也当绝对网址，不补）；dom_query 不需要的转义还原（`12\.6` → `12.6`，会改变 Markdown 含义的留着）。
+  - 和 Peck 的差别（v0.2 Phase 2–3，规则在 `src/html.rs`，每条都有合成样本）：
+    - 抽正文前先去掉：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）；读屏专用的重复文字（类名含 `visuallyhidden`、`screenreader`、以 `sr-only` 开头，带哈希的也算）；「Skip to content」这种页内跳转链接；`role` 是 banner、navigation、contentinfo 等的站点地标；空的格式元素（图标字体的 `<i></i>`）。
+    - 退回整个 `<body>` 的条件多一条：Readability 抽出来的像页脚（不到 1000 字、带「© 2026」「版权所有」「ICP 备」这类字样）。退回时再去掉正文外的 `<header>`。
+    - 整理 Markdown：只把真有协议的网址当绝对网址（Peck 把 `/wiki/Help:Contents` 这种路径里带 `:` 的也当绝对网址，不补）；`javascript:` 链接只留文字；dom_query 不需要的转义还原（`12\.6` → `12.6`、`\"` → `"`，链接标题里的留着，会改变 Markdown 含义的留着）；空列表项、空小标题去掉；小标题的锚点链接（`## [标题](#标题)`）和 `¶` 永久链接只留文字。
+    - `needs_js` 多一条：正文几乎是空的（不到 20 字）而有脚本（只有一两个 `type="module"` 的单页应用、脚本跳转页）。
 - **Pith 的「全部文字」作 `mode: full`**：不抽正文，整棵树的文字都要，表格一行一行出、格子用制表符隔开；用来核对摘录。Pith 接入时用这个模式。做法见 `docs/decisions/0003`。
 - **Pomelo 的「找不到正文」**：引擎不报错，交回空正文和 `needs_js`，由 App 决定怎么说；`web_extract` 工具在正文为空时交 `no_article`。
 - **表格、链接、代码块不丢**：`dom_query` 的 Markdown 转换在样本上逐项核对；丢了的补规则。
-- **元数据**：Readability 读 meta 和 JSON-LD 的那一套，两种模式一样。标题：Readability 的 → `<title>` → 第一个 `h1`；前两个是「唯一的 h1 + 分隔符 + 站名」（`配置文件 · Lumen 文档`）时用 h1。作者、发布日期、站名（`og:site_name` 等）、语言。
+- **元数据**：Readability 读 meta 和 JSON-LD 的那一套，两种模式一样。标题：Readability 的 → `<title>` → 第一个 `h1`；Readability 取的是 `<title>` 里站名那一段（最后一段，或等于 `og:site_name`）时改用第一段；标题是「唯一的 h1 + 分隔符 + 别的」时，h1 在正文里（或页面没有 `main`、`article`）就用 h1（`配置文件 · Lumen 文档`），h1 在正文外（mdBook 菜单栏里的书名）就用别的那段。作者、发布日期、站名（`og:site_name` 等）、语言。
 - **分段（`blocks`）**：见 §6。
 - **Markdown、纯文本、JSON、XML**：原样交回（Peck 的做法）。Markdown 的标题是第一个一级标题，分段按 Markdown 切；别的按空行切。
 

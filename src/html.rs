@@ -500,12 +500,16 @@ fn unescape(md: &str) -> String {
         }
         let table = t.starts_with('|');
         let chars: Vec<char> = line.chars().collect();
-        // 链接的网址和标题 `](网址 "标题")` 里不动：标题里的 `\"` 要留着
+        // 链接的网址和标题 `](网址 "标题")` 里：`\"`、`\(`、`\)`、`\\` 要留着，别的照常还原
         let mut in_link = false;
         let mut j = 0;
         while j < chars.len() {
             let c = chars[j];
-            let Some(&next) = chars.get(j + 1).filter(|_| c == '\\' && !in_link) else {
+            let escape = c == '\\'
+                && chars
+                    .get(j + 1)
+                    .is_some_and(|n| !in_link || !matches!(n, '"' | '(' | ')' | '\\'));
+            let Some(&next) = chars.get(j + 1).filter(|_| escape) else {
                 if c == ']' && chars.get(j + 1) == Some(&'(') {
                     in_link = true;
                 } else if c == ')' && in_link && chars.get(j.wrapping_sub(1)) != Some(&'\\') {
@@ -906,6 +910,13 @@ mod tests {
         assert_eq!(
             unescape(r"[a](https://x.example/b\)c) 之后 \(括号\)"),
             r"[a](https://x.example/b\)c) 之后 (括号)"
+        );
+        assert_eq!(
+            unescape(
+                r#"[design.md](https://x.example/d "design\.md") 和 [b](https://x.example/e "a\\b")"#
+            ),
+            r#"[design.md](https://x.example/d "design.md") 和 [b](https://x.example/e "a\\b")"#,
+            "链接标题里的点照常还原"
         );
         assert_eq!(
             unescape(r"全长 12\.6 公里\(约\)，见 \{x\}\! 和 C\# a\>b"),
