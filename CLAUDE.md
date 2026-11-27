@@ -136,6 +136,7 @@ engine-web 是 Peck、Pith、Pomelo 共用的网页引擎（独立 Rust 库）�
 - **几乎没有 Mac 专属的部分**：取正文、抓取、Tavily 都是纯 Rust，Linux 上能编、能测。
   - **云端 Claude 能做的**：`ROADMAP.md` 里标「云端」的 Phase，包括合成样本、取正文、抓取、Tavily 客户端和模拟服务、工具包、find、站点规则的代码。在 `cloud/v<主>.<次>` 分支上做，只推这条分支。
   - **只在本机做的**：真实网页的批量核对（快照只放 `local/`）、真跑 Tavily（花钱、要密钥）、接进 App（在 App 的仓库里）、合并和发版。
+  - **云端提交前先设作者**：云端环境默认的作者是 `Claude <noreply@anthropic.com>`，不对。开分支后先照 `main` 上第一笔提交设好：`git config user.name "$(git log -1 --format=%an b0511dd)"`、`git config user.email "$(git log -1 --format=%ae b0511dd)"`，再 commit（v0.2 的 9 笔是本机改过来的）。
   - **文件名不能只差大小写**：Mac 的磁盘不分大小写，`README.md` 和 `readme.md` 在同一个目录会撞成一个、`main` 切不过去（v0.2 出过一次）。
 - **位置约定**（find 和读共用）：标题路径（从文章标题往下的各级小标题）+ 第几段（正文里从 1 数起；表格一行、列表一项、一个代码块各算一段）。给模型的写法是「〈标题路径〉第 N 段」。
 - **边界**：
