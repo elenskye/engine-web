@@ -1,4 +1,4 @@
-# Phase 3 真实网页核对用的网址（2026-11-27 云端抓的）。只存网址，网页快照放 local/pages/，不进 Git。
+# 真实网页核对用的网址（v0.2：上半是云端从海外抓的，下半是本机补的）。只存网址，网页快照放 local/pages/，不进 Git。
 # 用法：cp docs/real-pages.txt local/pages/urls.txt && ./scripts/snapshot.sh && cargo run --release --example pages
 # GitHub（本会话能读的只有 engine-web 自己）
 https://github.com/elenskye/engine-web
@@ -47,3 +47,37 @@ https://docs.python.org/3/library/json.html
 https://www.ruanyifeng.com/blog/
 # 知网文献页（海外访问会跳到验证码页）
 https://oversea.cnki.net/kcms/detail/detail.aspx?dbcode=CJFD&filename=RMLT202115024
+# —— 本机补的（2026-11-27，国内网络下抓）：门户和老编码页、学术长页、不是网页的 ——
+https://baike.baidu.com/item/%E4%B8%AD%E5%9B%BD%E7%9F%A5%E7%BD%91
+https://news.sina.com.cn/
+https://www.163.com/
+https://www.chinanews.com.cn/
+https://www.thepaper.cn/
+https://www.ithome.com/
+https://www.douban.com/
+https://www.cnblogs.com/
+https://www.moe.gov.cn/
+https://www.nsfc.gov.cn/
+https://www.pku.edu.cn/
+https://blog.sciencenet.cn/
+https://www.cssn.cn/
+https://www.jjwxc.net/
+https://www.aozora.gr.jp/cards/000148/files/773_14560.html
+https://www.nature.com/articles/s41586-021-03819-2
+https://pubmed.ncbi.nlm.nih.gov/34265844/
+https://arxiv.org/html/1706.03762v7
+https://plato.stanford.edu/entries/consciousness/
+https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(nominal)
+https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array
+https://news.ycombinator.com/
+https://www.theguardian.com/international
+https://paulgraham.com/greatwork.html
+https://peps.python.org/pep-0008/
+https://docs.rs/serde/latest/serde/
+https://react.dev/learn
+https://www.gutenberg.org/files/1342/1342-h/1342-h.htm
+https://www.w3.org/TR/WCAG21/
+https://arxiv.org/pdf/1706.03762
+https://api.github.com/repos/rust-lang/rust
+https://blog.rust-lang.org/feed.xml
+https://raw.githubusercontent.com/rust-lang/rust/master/README.md

@@ -2,7 +2,7 @@
 
 Peck、Pith、Pomelo 共用的网页引擎（Rust 库）：搜索、抓取、取正文一起管。App 交进网址、字节或搜索词，拿回标题、Markdown 正文、链接和元数据，或者搜索结果和花费；怎么联网、要不要登录、结果存哪归各 App。
 
-> **v0.2.0**（取正文 + `web_extract`、`web_find` 工具包 + 命令行）：在云端分支 `cloud/v0.2` 上做完，等本机验收、合并、打 tag。这一版的接口和 App 怎么接见 `CHANGELOG.md`，验收步骤见 `HANDOFF.md`，进度见 `ROADMAP.md`，设计见 `docs/design.md`。
+> 现在是 **v0.2.0**（tag，2026-11-27）：取正文 + `web_extract`、`web_find` 工具包 + 命令行，不联网。接口和 App 怎么接见 `CHANGELOG.md`，进度见 `ROADMAP.md`，设计见 `docs/design.md`。
 
 ## 能力
 
@@ -58,6 +58,6 @@ cargo run --bin engine-web -- call web_find '{"file":"tests/fixtures/html/zh-new
 cargo run --example pages -- tests/fixtures/html
 ```
 
-`examples/pages` 对一个目录里的每份网页跑两种模式，打印标题、字数、段数、开头几行，结果写进 `local/out/`（不带参数时读 `local/pages/` 的真实网页快照，快照用 `scripts/snapshot.sh` 抓，Phase 3 用过的网址在 `docs/real-pages.txt`）。合成样本在 `tests/fixtures/html/`，写法见那里的 `README.md`；不是 UTF-8 的和二进制的样本用 `cargo run --example make_samples` 生成。
+`examples/pages` 对一个目录里的每份网页跑两种模式，打印标题、字数、段数、开头几行，结果写进 `local/out/`（不带参数时读 `local/pages/` 的真实网页快照：`cp docs/real-pages.txt local/pages/urls.txt && ./scripts/snapshot.sh`）。合成样本在 `tests/fixtures/html/`，写法见那里的 `README.md`；不是 UTF-8 的和二进制的样本用 `cargo run --example make_samples` 生成。
 
 规则见 `CLAUDE.md`（Codex 读 `AGENTS.md`，是同一份）。

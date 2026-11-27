@@ -1,6 +1,6 @@
 # engine-web 设计稿
 
-> v0.1.0 计划，v0.2 Phase 1–2 定稿了取正文的部分（§2 的 v0.2 接口、§3 的编码和类型、§4、§6）。范围和分工见 `docs/decisions/0001`。工具清单、调用上下文、错误、费用和 find 的格式都照 engine-core 的设计稿（`engine-core/docs/design.md`，钉 tag `v0.2.0`）。下面的接口是草案，各版本的 Phase 1 定稿，公共接口的变化由本机 Claude 审。
+> v0.2.0 已发：§2 的 v0.2 接口、§3 的编码和类型、§4、§6 是现在的实现；别的是草案，各版本的 Phase 1 定稿，公共接口的变化由本机 Claude 审。范围和分工见 `docs/decisions/0001`。工具清单、调用上下文、错误、费用和 find 的格式照 engine-core 的设计稿（钉 tag `v0.2.0`）。
 
 ## 0. 现状：三家各写了一套
 
@@ -51,7 +51,7 @@
 全部同步；异步的 App 用 `spawn_blocking` 包。长任务（爬站、多页合并）逐页查 `Cancel`。
 
 ```rust
-// v0.2：取正文，不联网（Phase 1–2 已实现，src/article.rs、src/lib.rs）
+// v0.2：取正文，不联网（已发，src/lib.rs、src/article.rs）
 pub fn extract(bytes: &[u8], content_type: Option<&str>, url: &str, opts: &ExtractOptions) -> Result<Article, Error>;
 pub fn sniff(bytes: &[u8], content_type: Option<&str>, url: &str) -> Result<Kind, Binary>;  // 类型判断
 pub fn decode(bytes: &[u8], content_type: Option<&str>) -> (String, &'static str);         // 文字和编码名
@@ -106,22 +106,22 @@ pub trait Transport { fn send(&self, req: Request) -> Result<Response, Transport
 - **跳转**：自己跟，每一跳重新查网址和地址，最多 5 次；默认只跟同一个网站（只差 `www.`、`http` → `https`），跳到别的网站就停下，交回 `redirect_elsewhere` 和新网址；App 可以放开（Pith 的导入、Pomelo 的「添加网页」用户自己给的网址可以放开）。
 - **超时和大小**：默认总 30 s、连接 15 s、最多 10 MB；超了按收到的处理，标「不全」。App 可以改，但只能在引擎的上限之内。
 - **编码**：BOM → 合法的 UTF-8 → 声明的（HTTP 头 → 网页 meta / XML 声明）→ chardetng 探测。见 `docs/decisions/0005`。
-- **类型**：按内容判断，不信 Content-Type 和扩展名，看不出来才参考（Pith 的 `sniff` 搬过来，`src/sniff.rs`）：魔数认出 PDF、图片、Office（新旧两种）、EPUB、压缩包、音视频；像文字的再分 HTML、XML（`<?xml`、RSS）、JSON、Markdown、纯文本，后两种只能靠 Content-Type 或扩展名分；像文字但 Content-Type 说是图片这类二进制的，信 Content-Type。SVG 算图片。PDF、图片等交 `not_web`（`Error::NotWeb(Binary)`），原件作附件，App 再交给 engine-pdf 或别的引擎。
+- **类型**：按内容判断，不信 Content-Type 和扩展名，看不出来才参考（Pith 的 `sniff` 搬过来，`src/sniff.rs`）：魔数认出 PDF、图片、Office（新旧两种）、EPUB、压缩包、音视频；像文字的再分 HTML、XML（`<?xml`、RSS）、JSON、Markdown、纯文本，后两种只能靠 Content-Type 或扩展名分；扩展名或 Content-Type 说是 Markdown 的，里面夹着 HTML 标签也还是 Markdown（GitHub 的 README）；像文字但 Content-Type 说是图片这类二进制的，信 Content-Type。PDF 头 `%PDF-` 要在开头，或者前 1 KB 里、前面只有空白或二进制字节（网页里写着「%PDF-1.7」的不算）。SVG 算图片。PDF、图片等交 `not_web`（`Error::NotWeb(Binary)`），原件作附件，App 再交给 engine-pdf 或别的引擎。
 - **App 交进来的**：User-Agent、Cookie 和别的请求头、代理。不带来源页。
 - **不归引擎**：缓存（Peck 一个任务 15 分钟、Pith 存快照）、同一站点的限速（Pith 隔 1.5 s；v0.3 提供一个可选的 `HostPacer` 由 App 持有，要不要用由 App 定）、WebKit 渲染。
 
 ## 4. 取正文
 
-- **以 Peck 那套为底**（`src/html.rs`）：`dom_smoothie` 抽正文转 Markdown；不到 `min_article_chars`（默认 200 字）就退回整个 `<body>`，去掉脚本、样式、导航、页脚、侧栏、表单、iframe；`tidy_markdown`：链接改成绝对网址，图片只留说明（v0.5 起另把图的网址和说明列进 `images`），连续空行收成一个；`needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
-  - 和 Peck 的差别（v0.2 Phase 2–3，规则在 `src/html.rs`，每条都有合成样本）：
-    - 抽正文前先去掉：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）；读屏专用的重复文字（类名含 `visuallyhidden`、`screenreader`、以 `sr-only` 开头，带哈希的也算）；「Skip to content」这种页内跳转链接；`role` 是 banner、navigation、contentinfo 等的站点地标；空的格式元素（图标字体的 `<i></i>`）。
-    - 退回整个 `<body>` 的条件多一条：Readability 抽出来的像页脚（不到 1000 字、带「© 2026」「版权所有」「ICP 备」这类字样）。退回时再去掉正文外的 `<header>`。
-    - 整理 Markdown：只把真有协议的网址当绝对网址（Peck 把 `/wiki/Help:Contents` 这种路径里带 `:` 的也当绝对网址，不补）；`javascript:` 链接只留文字；dom_query 不需要的转义还原（`12\.6` → `12.6`、`\"` → `"`，链接标题里的留着，会改变 Markdown 含义的留着）；空列表项、空小标题去掉；小标题的锚点链接（`## [标题](#标题)`）和 `¶` 永久链接只留文字。
-    - `needs_js` 多一条：正文几乎是空的（不到 20 字）而有脚本（只有一两个 `type="module"` 的单页应用、脚本跳转页）。
+- **以 Peck 那套为底**（`src/html/`：`clean` 清理、`markdown` 整理、`meta` 标题元数据、`full` 全部文字）：`dom_smoothie` 抽正文转 Markdown；不到 `min_article_chars`（默认 200 字）就退回整个 `<body>`，去掉脚本、样式、导航、页脚、侧栏、表单、iframe；`tidy_markdown`：链接改成绝对网址，图片只留说明（v0.5 起另把图的网址和说明列进 `images`），连续空行收成一个；`needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
+  - 和 Peck 的差别（每条都有合成样本）：
+    - 抽正文前先去掉：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）；读屏专用的重复文字（类名含 `visuallyhidden`、`screenreader`、以 `sr-only` 开头，带哈希的也算）；「Skip to content」这种页内跳转链接；`role` 是 banner、navigation、contentinfo 等的站点地标；空的格式元素（图标字体的 `<i></i>`）；只有协议的链接（空的 `mailto:`，Readability 会把它拼到网页网址后面）只留文字。`<pre>` 里的 `<br>`、逐行的 `<div>`（代码高亮）写成真的换行，代码不挤成一行。
+    - 退回整个 `<body>` 的条件多一条：Readability 抽出来的像页脚（不到 1000 字，大半的字在带「© 2026」「版权所有」「ICP 备」这类字样的段里；正文末尾一句「本文版权所有」不算）。退回时再去掉正文外的 `<header>`。
+    - 整理 Markdown：只把真有协议的网址当绝对网址（Peck 把 `/wiki/Help:Contents` 这种路径里带 `:` 的也当绝对网址，不补）；`javascript:` 链接只留文字；链接标题去掉（维基的标题和链接文字一样，Nature 把整条参考文献放进去，长页能省一到两成字）；dom_query 不需要的转义还原（`12\.6` → `12.6`、`\"` → `"`，会改变 Markdown 含义的留着）；空列表项、空小标题去掉；小标题的锚点链接（`## [标题](#标题)`）和 `¶` 永久链接只留文字。
+    - `needs_js` 多一条：正文几乎是空的（不到 20 字）而有脚本（只有一两个 `type="module"` 的单页应用、脚本跳转页）。脚本在原 HTML 里数，不分大小写，JSON-LD 这类数据块不算。
 - **Pith 的「全部文字」作 `mode: full`**：不抽正文，整棵树的文字都要，表格一行一行出、格子用制表符隔开；用来核对摘录。Pith 接入时用这个模式。做法见 `docs/decisions/0003`。
 - **Pomelo 的「找不到正文」**：引擎不报错，交回空正文和 `needs_js`，由 App 决定怎么说；`web_extract` 工具在正文为空时交 `no_article`。
 - **表格、链接、代码块不丢**：`dom_query` 的 Markdown 转换在样本上逐项核对；丢了的补规则。
-- **元数据**：Readability 读 meta 和 JSON-LD 的那一套，两种模式一样。标题：Readability 的 → `<title>` → 第一个 `h1`；Readability 取的是 `<title>` 里站名那一段（最后一段，或等于 `og:site_name`）时改用第一段；标题是「唯一的 h1 + 分隔符 + 别的」时，h1 在正文里（或页面没有 `main`、`article`）就用 h1（`配置文件 · Lumen 文档`），h1 在正文外（mdBook 菜单栏里的书名）就用别的那段。作者、发布日期、站名（`og:site_name` 等）、语言。
+- **元数据**：Readability 读 meta 和 JSON-LD 的那一套，两种模式一样。标题：Readability 的 → `<title>` → 第一个 `h1`；Readability 取的是 `<title>` 里站名那一段（最后一段，或等于 `og:site_name`）时改用第一段；标题是「唯一的 h1 + 分隔符 + 别的」时，h1 在正文里（或页面没有 `main`、`article`）就用 h1（`配置文件 · Lumen 文档`），h1 在正文外（mdBook 菜单栏里的书名）就用别的那段。作者（一个字也没有的编号不算）、发布日期、站名（`og:site_name` 等）、语言。
 - **分段（`blocks`）**：见 §6。
 - **Markdown、纯文本、JSON、XML**：原样交回（Peck 的做法）。Markdown 的标题是第一个一级标题，分段按 Markdown 切；别的按空行切。
 
@@ -174,8 +174,6 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 
 ## 10. 还没定的（在对应 Phase 里定，写进决定）
 
-- ~~编码探测要不要加 `chardetng`~~：加，见 `docs/decisions/0005`。
-- ~~`full` 模式怎么做~~：搬 Pith 的走树，见 `docs/decisions/0003`。
 - 钉地址防 DNS 重绑定在 ureq 3 里怎么做（v0.3 Phase 1）。
 - Tavily 取页、爬站、地图的计点方式和上限（v0.3 Phase 1，对着官方文档）。
 - 站点规则怎么写：每站一个 Rust 模块，还是声明式的选择器表（v0.5 Phase 1）。

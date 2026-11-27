@@ -2,9 +2,9 @@
 
 每个发出去的版本（tag `v<版本>`）：公共接口和工具清单的变化、App 升级要改什么。
 
-## v0.2.0（云端做完，本机验收后打 tag）
+## v0.2.0（2026-11-27）
 
-首个能接进 App 的版本：**取正文** + 给 Agent 的工具包（`web_extract`、`web_find`）+ 命令行。不联网（抓取和 Tavily 在 v0.3）。设计见 `docs/design.md` §2–§4、§6，接线见 `docs/toolkit.md`。
+首个能接进 App 的版本：**取正文** + 给 Agent 的工具包（`web_extract`、`web_find`）+ 命令行。不联网（抓取和 Tavily 在 v0.3）。设计见 `docs/design.md` §2–§4、§6，接线见 `docs/toolkit.md`。云端做 Phase 1–4，本机审核、在 Mac 上核对 63 个真实网页、修了 9 处（下面「和三家旧实现的差别」里标「本机」的）后发版。
 
 ### 公共接口
 
@@ -34,8 +34,8 @@ engine-core tag `v0.2.0`；`dom_smoothie ^0.18.2`、`dom_query ^0.28.0`（和 Pe
 ### 和三家旧实现的差别（接入时要知道）
 
 - **编码**：BOM → 合法的 UTF-8 → 声明的（HTTP 头 → meta / XML 声明）→ chardetng。Peck 只看 HTTP 头、Pomelo 不认编码，没声明的 GBK、Big5 页现在不乱码；Pith 退 GB18030 的地方现在探测，声明 UTF-8 而有坏字节的不再整页乱码。
-- **`article` 模式（对 Peck 的 `html_to_markdown`）**：隐藏元素、读屏专用文字、跳转链接、站点地标先去掉；Readability 抽到页脚时退回整个 body；dom_query 多余的转义还原（`12\.6`、`\"`）；空列表项、空小标题、`javascript:` 链接、小标题锚点和 `¶` 清掉；路径里带 `:` 的相对链接也补全；标题多几条修正（站名那段、菜单栏里的书名）；`needs_js` 多一条（正文几乎是空的、有脚本）。Peck 的测试搬进 `tests/ported.rs` 照样通过（`needs_js` 那条按新规则改了断言）；和 Peck 旧输出的逐字对照在接入 Peck 时做（design §7）。
-- **`full` 模式（对 Pith 的 `html_text`）**：逐字一致（Pith 的那条测试原样搬进 `tests/ported.rs`）。类型判断：CSV 认作纯文本；旧版 Office 按 UTF-16LE 流名分；空文件不报错；Pith 的 60 万字上限改由 `web_extract` 的 `max_chars` / `offset` 分段。
+- **`article` 模式（对 Peck 的 `html_to_markdown`）**：隐藏元素、读屏专用文字、跳转链接、站点地标先去掉；Readability 抽到页脚时退回整个 body（大半的字是版权、备案那几段才算页脚）；dom_query 多余的转义还原（`12\.6`、`\"`）；空列表项、空小标题、`javascript:` 链接、小标题锚点和 `¶` 清掉；路径里带 `:` 的相对链接也补全；标题多几条修正（站名那段、菜单栏里的书名）；`needs_js` 多一条（正文几乎是空的、有脚本）。本机加的：**链接标题去掉**（`[文字](网址 "标题")` → `[文字](网址)`，维基、Nature 这类长页省一到两成字）；`<pre>` 里逐行 `<div>`、`<br>` 的代码保留换行和缩进（Peck 会挤成一行）；空的 `mailto:` 只留文字；`<SCRIPT>` 大写也算脚本、JSON-LD 不算；没有一个字的作者（编号）不算；列表项里 `<br>` 断开的下一行还算这一项（原来拆成一项加一段）。Peck 的测试搬进 `tests/ported.rs` 照样通过（`needs_js` 那条按新规则改了断言）；和 Peck 旧输出的逐字对照在接入 Peck 时做（design §7）。
+- **`full` 模式（对 Pith 的 `html_text`）**：逐字一致（Pith 的那条测试原样搬进 `tests/ported.rs`）。类型判断：CSV 认作纯文本；旧版 Office 按 UTF-16LE 流名分；空文件不报错；`.md` 里夹着 HTML 还是 Markdown（本机）；网页里写着「%PDF-1.7」不再被当成 PDF（本机）；Pith 的 60 万字上限改由 `web_extract` 的 `max_chars` / `offset` 分段。
 - **Pomelo**：「找不到正文」引擎不报错，`web_extract` 报 `no_article`。
 
 ### App 怎么接
