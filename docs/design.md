@@ -41,6 +41,7 @@
 | `http_status` | 404、500 这类 | 换网址，或者告诉站主打不开 |
 | `not_web` | PDF、图片、压缩包、音视频 | 原件在附件里；PDF 交给 PDF 工具 |
 | `no_article` | 抽不出正文 | 换 `mode: full`，或 `via: tavily` |
+| `no_heading` | `web_find` 的 `under` 在网页里没有 | 去掉 `under`，或先看小标题 |
 | `too_large`（通用） | 超过大小上限 | 交回前面那部分，标明不全（这一种不算失败） |
 | `network`（通用）、`timeout` | 连不上、超时 | 可以重试一次 |
 | `auth`、`quota`、`service`（通用）、`rate_limited` | Tavily 的 401/403、432/433、5xx、429 | 密钥或额度的事告诉站主，限流等一会儿 |
@@ -66,7 +67,8 @@ pub struct Article {
     pub needs_js: bool,
 }
 pub enum Binary { Pdf, Image, Word, Excel, PowerPoint, Epub, Archive, Audio, Video, Other }  // Error::NotWeb(Binary)
-pub fn find(article: &Article, q: &engine_core::find::Query, under: Option<&[String]>) -> engine_core::find::Found<Loc>;
+pub fn find(article: &Article, q: &engine_core::find::Query, under: Option<&[String]>) -> Result<engine_core::find::Found<Loc>, Error>;  // under 没有：Error::NoHeading
+pub mod tools { pub fn toolkit() -> Toolkit<()>; pub fn manifest() -> Vec<ToolSpec>; pub fn call(name, args, ctx) -> Result<Output, ToolError>; }  // v0.2 Phase 4
 
 // v0.3：抓取
 pub fn fetch(url: &str, opts: &FetchOptions, transport: &dyn Transport, cancel: &Cancel) -> Result<Fetched, Error>;
@@ -136,7 +138,7 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 - 段号、标题路径、文章标题、怎么切：见 `docs/decisions/0004`（段号全文连续，小标题也算一段，路径不含文章标题）。
 - 单元是 `blocks` 里的一段；按词找时，几个词在同一段才算一处。
 - 给模型的写法：「〈引言 › 方法〉第 3 段」；没有小标题时只写「第 3 段」（`Block::label`）。
-- 范围：`under` 只在某个标题路径下找。
+- 范围：`under` 只在某个小标题下面找（含这个小标题本身）。写从上往下的几级，可以只写最后几级（`["方法"]` 找得到〈引言 › 方法〉）；比较时和 find 一样归一化。几个小标题都对得上就都算。
 - 归一化、整句 → 按词、前后文、上限都由 engine-core 做。
 
 ## 7. 从三家搬什么、怎么核对旧行为

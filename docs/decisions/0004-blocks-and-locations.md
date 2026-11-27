@@ -9,3 +9,4 @@
 - 一段、表格一行、列表一项、一个代码块、一个小标题各算一段。小标题这一段的路径是它上面的各级，不含它自己。
 - 段的文字去掉 Markdown 记号（链接只留文字、强调和行内代码去掉记号、转义还原），表格一行的格子用制表符隔开；find 比的是它。
 - 怎么切：`article` 模式和 Markdown 原文按 Markdown 的行切（`src/blocks.rs`），段号和模型读到的 Markdown 一一对应；`full` 模式走 DOM 切（`src/html.rs` 的 `Blocks`），和 `walk` 跳过同样的元素；纯文本、JSON、XML 按空行切。
+- `web_find` 的 `under`（v0.2 Phase 4 补）：只在某个小标题下面找，含这个小标题本身；写从上往下的几级，可以只写最后几级，比较时和 find 一样归一化；网页里没有就报 `no_heading`。

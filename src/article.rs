@@ -96,19 +96,20 @@ pub struct Block {
 impl Block {
     /// 给模型的位置写法：「〈引言 › 方法〉第 3 段」；没有小标题时「第 3 段」。
     pub fn label(&self) -> String {
-        if self.heading_path.is_empty() {
-            format!("第 {} 段", self.paragraph)
-        } else {
-            format!(
-                "〈{}〉第 {} 段",
-                self.heading_path.join(" › "),
-                self.paragraph
-            )
-        }
+        label(&self.heading_path, self.paragraph)
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) fn label(heading_path: &[String], paragraph: u32) -> String {
+    if heading_path.is_empty() {
+        format!("第 {paragraph} 段")
+    } else {
+        format!("〈{}〉第 {paragraph} 段", heading_path.join(" › "))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum BlockKind {
     /// 小标题（文章标题也是这一种，路径为空）。
     Heading,

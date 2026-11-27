@@ -10,10 +10,10 @@
 | `chardetng` | `^1.0.0` | Apache-2.0 OR MIT | 没声明编码又不是 UTF-8 时探测编码（Firefox 用的那个），见 `docs/decisions/0005` | [crate](https://crates.io/crates/chardetng) |
 | `regex` | `^1.13.2` | MIT OR Apache-2.0 | 整理 Markdown（链接补全、图片只留说明），Peck 的 `tidy_markdown` 用的就是它 | [crate](https://crates.io/crates/regex) |
 | `url` | `^2.5.9` | MIT OR Apache-2.0 | 网址解析、相对链接补全 | [crate](https://crates.io/crates/url) |
-| `serde_json` | `^1.0.154`（只在测试） | MIT OR Apache-2.0 | 读合成样本的 `.expect.json`；v0.2 Phase 4 起工具参数也用 | [crate](https://crates.io/crates/serde_json) |
-| `engine-core` | tag `v0.2.0` | 计划 | 工具清单、调用、命令行骨架、find、取消（v0.2 Phase 4） | [GitHub](https://github.com/elenskye/engine-core) |
+| `engine-core` | tag `v0.2.0` | UNLICENSED（站主自己的） | 工具清单、调用、命令行骨架、find、取消 | [GitHub](https://github.com/elenskye/engine-core) |
+| `serde` | `^1.0.229`（`derive`） | MIT OR Apache-2.0 | `Loc`、`BlockKind` 序列化（find 的结果） | [crate](https://crates.io/crates/serde) |
+| `serde_json` | `^1.0.154` | MIT OR Apache-2.0 | 工具参数和结果；测试读合成样本的 `.expect.json` | [crate](https://crates.io/crates/serde_json) |
 | `ureq` | 计划（3.x） | 计划 | 同步 HTTP，系统 TLS（v0.3） | [crate](https://crates.io/crates/ureq) |
-| `serde` | 计划 | 计划 | 工具参数、Tavily 的 JSON（v0.2 Phase 4 / v0.3） | [crate](https://crates.io/crates/serde) |
 | `zeroize` | 计划 | 计划 | 清零 Tavily 密钥和 Cookie（v0.3） | [crate](https://crates.io/crates/zeroize) |
 
 dom_smoothie、dom_query 有更新的版本（0.20 / 0.30，html5ever 0.40）。现在跟 Peck 钉同一版，见 `docs/decisions/0002`。

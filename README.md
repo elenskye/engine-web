@@ -2,7 +2,7 @@
 
 Peck、Pith、Pomelo 共用的网页引擎（Rust 库）：搜索、抓取、取正文一起管。App 交进网址、字节或搜索词，拿回标题、Markdown 正文、链接和元数据，或者搜索结果和花费；怎么联网、要不要登录、结果存哪归各 App。
 
-> 现在在做 **v0.2.0**（取正文）：Phase 1–2 在云端分支 `cloud/v0.2` 上做完，等本机审核和真实网页核对，还没发版。进度见 `ROADMAP.md`，交接见 `HANDOFF.md`，设计见 `docs/design.md`。
+> 现在在做 **v0.2.0**（取正文 + `web_extract`、`web_find` 工具包）：Phase 1、2、4 和 Phase 3 的一部分在云端分支 `cloud/v0.2` 上做完，等本机审核，还没发版。进度见 `ROADMAP.md`，交接见 `HANDOFF.md`，设计见 `docs/design.md`。
 
 ## 计划的能力
 
@@ -34,7 +34,19 @@ article.blocks;     // 分段：Block { heading_path, paragraph, kind, text }，
 article.needs_js;   // 正文很短、脚本很多：可能要开 JavaScript
 ```
 
-不是网页（PDF、图片、Office、压缩包、音视频）交 `Error::NotWeb(Binary)`，App 再交给别的引擎。单独用的：`sniff`（类型）、`decode`（编码）。
+不是网页（PDF、图片、Office、压缩包、音视频）交 `Error::NotWeb(Binary)`，App 再交给别的引擎。单独用的：`sniff`（类型）、`decode`（编码）、`find`（在 `Article` 里找字，位置是「〈小标题路径〉第 N 段」）。
+
+## 给 Agent 的工具包
+
+`engine_web::tools::toolkit()` 是 engine-core 格式的工具包：`web_extract`（取正文，太长分段）、`web_find`（找字）。清单在 `tools/*.json`，App 怎么接、能覆盖什么见 `docs/toolkit.md`。命令行：
+
+```bash
+cargo run --bin engine-web -- tools
+```
+
+```bash
+cargo run --bin engine-web -- call web_find '{"file":"tests/fixtures/html/zh-news.html","query":"起步 2 元"}'
+```
 
 ## 开发
 

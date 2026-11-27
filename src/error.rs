@@ -17,6 +17,8 @@ pub enum Error {
     NotWeb(Binary),
     /// 抽不出正文（工具层在正文为空时交，`extract` 本身不交）。
     NoArticle,
+    /// find 的 `under` 指的小标题网页里没有。
+    NoHeading,
     /// 超过大小上限（v0.3 抓取用；交回前面那部分，不算失败）。
     TooLarge,
     /// 连不上。
@@ -45,6 +47,7 @@ impl Error {
             Self::HttpStatus { .. } => "http_status",
             Self::NotWeb(_) => "not_web",
             Self::NoArticle => "no_article",
+            Self::NoHeading => "no_heading",
             Self::TooLarge => "too_large",
             Self::Network => "network",
             Self::Timeout => "timeout",
@@ -76,6 +79,7 @@ impl fmt::Display for Error {
                 write!(f, "这是{gap}{label}，不是网页。")
             }
             Self::NoArticle => f.write_str("这个网页里没读到正文。"),
+            Self::NoHeading => f.write_str("网页里没有这个小标题。"),
             Self::TooLarge => f.write_str("网页太大，只收了前面一部分。"),
             Self::Network => f.write_str("连不上这个网站。"),
             Self::Timeout => f.write_str("读网页超时了。"),
@@ -187,6 +191,7 @@ mod tests {
             (Error::HttpStatus { status: 500 }, "http_status"),
             (Error::NotWeb(Binary::Other), "not_web"),
             (Error::NoArticle, "no_article"),
+            (Error::NoHeading, "no_heading"),
             (Error::TooLarge, "too_large"),
             (Error::Network, "network"),
             (Error::Timeout, "timeout"),

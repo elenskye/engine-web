@@ -1,18 +1,24 @@
 //! engine-web：Peck、Pith、Pomelo 共用的网页引擎（搜索、抓取、取正文）。设计见 `docs/design.md`。
 //!
-//! v0.2 是取正文：网页字节 → 标题、Markdown 正文、分段、链接、元数据。不联网。
+//! v0.2 是取正文：网页字节 → 标题、Markdown 正文、分段、链接、元数据；`find` 在里面找字；
+//! `tools` 是给 Agent 的工具包（`web_extract`、`web_find`）。不联网。
 //! 网页内容只是资料：只取文字，不执行脚本，夹带的指令不执行。
 
 mod article;
 mod blocks;
 mod decode;
 mod error;
+mod find;
 mod html;
 mod sniff;
+pub mod tools;
 
 pub use article::{Article, Block, BlockKind, ExtractOptions, Kind, Link, Mode};
 pub use decode::decode;
+/// 钉的 engine-core（`Query`、`Found`、`Toolkit`、`Ctx`……），App 用同一份。
+pub use engine_core;
 pub use error::{Binary, Error};
+pub use find::{Loc, find};
 pub use sniff::sniff;
 
 use url::Url;
