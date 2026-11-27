@@ -1,0 +1,17 @@
+{
+  "about": "字节是合法的 UTF-8，但 meta 写着 gb2312（老站改版常见）：按 UTF-8 解",
+  "url": "http://old.example.cn/notice.html",
+  "content_type": "text/html",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "旧站改版说明",
+  "needs_js": false,
+  "article": {
+    "contains": ["本站已经整体换成 UTF-8 编码", "旧的书签可以继续使用"],
+    "excludes": []
+  },
+  "full": {
+    "contains": ["本站已经整体换成 UTF-8 编码"],
+    "excludes": []
+  }
+}

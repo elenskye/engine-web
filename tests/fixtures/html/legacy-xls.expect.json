@@ -1,0 +1,6 @@
+{
+  "about": "不是网页：旧版 Excel（.xls，OLE 复合文档）",
+  "sample": "legacy.xls",
+  "url": "https://files.example.com/legacy.xls",
+  "not_web": "excel"
+}

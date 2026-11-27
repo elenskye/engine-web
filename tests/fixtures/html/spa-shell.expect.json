@@ -1,0 +1,19 @@
+{
+  "about": "只有脚本外壳的单页应用：没有正文，脚本 6 个，要提示「可能要开 JavaScript」",
+  "url": "https://app.example.com/dashboard",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Dashboard · Orbit",
+  "lang": "en",
+  "needs_js": true,
+  "article": {
+    "contains": [],
+    "excludes": ["__CONFIG__", "Date.now", "enable JavaScript"],
+    "max_chars": 0
+  },
+  "full": {
+    "contains": [],
+    "excludes": ["__CONFIG__", "Date.now", "enable JavaScript"],
+    "max_chars": 0
+  }
+}

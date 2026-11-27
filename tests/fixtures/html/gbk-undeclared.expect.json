@@ -1,0 +1,13 @@
+{
+  "about": "没声明编码的 GBK 中文页：不是合法的 UTF-8，chardetng 探测",
+  "url": "http://lib.example.cn/news/2026/winter.html",
+  "kind": "html",
+  "encoding": "GBK",
+  "title": "示例县图书馆冬季开放时间调整",
+  "needs_js": false,
+  "article": {
+    "contains": ["周二至周日 9:00—17:30，周一闭馆", "逾期未还的图书每天收取滞纳金一角"],
+    "excludes": ["馆内动态", "版权所有"]
+  },
+  "full": {"contains": ["首页 馆内动态 读者指南", "续借期为三十天"], "excludes": []}
+}

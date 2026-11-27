@@ -1,0 +1,18 @@
+{
+  "about": "Phase 3（GitHub 空仓库这类短页）：正文不到 200 字退回整个 body，页眉地标（header、role=banner / navigation / contentinfo）、页内跳转链接、只剩图标的空列表项都要去掉",
+  "url": "https://code.example.com/example/notes",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "example/notes · CodeHost",
+  "needs_js": false,
+  "article": {
+    "contains": ["This repository is empty.", "[create a new file](https://code.example.com/example/notes/new/main)"],
+    "excludes": ["Skip to content", "Solutions", "EnterpriseFor large teams", "Issues", "© 2026 CodeHost"],
+    "links": ["https://code.example.com/example/notes/new/main"],
+    "max_chars": 160
+  },
+  "full": {
+    "contains": ["This repository is empty.", "Solutions"],
+    "excludes": []
+  }
+}

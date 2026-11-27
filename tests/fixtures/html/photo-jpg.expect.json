@@ -1,0 +1,7 @@
+{
+  "about": "不是网页：JPEG 图片",
+  "sample": "photo.jpg",
+  "url": "https://files.example.com/photo.jpg",
+  "content_type": "application/octet-stream",
+  "not_web": "image"
+}

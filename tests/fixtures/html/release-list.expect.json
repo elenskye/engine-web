@@ -1,0 +1,14 @@
+{
+  "about": "Phase 3（统计局发布列表页）：Readability 选中了页脚（版权、备案，超过 200 字），要当作没抽到、退回整个 body，把列表留下",
+  "url": "https://tjj.example.gov.cn/sj/zxfb/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "数据发布 - 示例省统计局",
+  "needs_js": false,
+  "article": {
+    "contains": ["[2026年10月份全省居民消费价格同比上涨0.4%](https://tjj.example.gov.cn/sj/zxfb/202611/t20261120_0002.html", "10月份全省经济运行总体平稳"],
+    "excludes": [],
+    "links": ["https://tjj.example.gov.cn/sj/zxfb/202611/t20261110_0005.html"]
+  },
+  "full": {"contains": ["2026年10月份全省能源生产情况2026-11-10"], "excludes": []}
+}

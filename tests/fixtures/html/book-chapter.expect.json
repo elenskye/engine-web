@@ -1,0 +1,14 @@
+{
+  "about": "Phase 3（mdBook 的 Rust 文档）：唯一的 h1 是菜单栏里的书名，<title> 是「章节 - 书名」，标题要取章节；小标题的锚点链接和 ¶ 只留文字（和标题一样的章节小标题 Readability 会去掉，路径从下一级起）；图标的空 <i> 不留 ** ",
+  "url": "https://book.example.org/borrowing.html",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Borrowing Rules",
+  "needs_js": false,
+  "article": {
+    "contains": ["only one task may write to a package at a time", "### Why not locks?\n", "### Sharing reads\n"],
+    "excludes": ["The Kestrel Book", "**", "Toggle Table of Contents", "¶", "](#why)"],
+    "blocks": [{"contains": "Locks held by crashed tasks are hard to clean up.", "kind": "paragraph", "path": ["Why not locks?"]}]
+  },
+  "full": {"contains": ["Reads never wait for other reads"], "excludes": []}
+}

@@ -1,0 +1,10 @@
+{
+  "about": "meta 声明 Big5 的繁体中文页",
+  "url": "https://museum.example.tw/exhibitions/autumn.html",
+  "kind": "html",
+  "encoding": "Big5",
+  "title": "範例市立美術館秋季特展",
+  "needs_js": false,
+  "article": {"contains": ["本館秋季特展「山與海之間」即日起至明年一月底展出", "六十五歲以上長者免費入場"], "excludes": []},
+  "full": {"contains": ["呈現臺灣東部的地景變化"], "excludes": []}
+}

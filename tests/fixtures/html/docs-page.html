@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>配置文件 · Lumen 文档</title>
+<meta property="og:site_name" content="Lumen 文档">
+</head>
+<body>
+<nav class="sidebar" aria-label="文档目录">
+  <ul>
+    <li><a href="/docs/">开始</a></li>
+    <li><a href="/docs/install/">安装</a></li>
+    <li><a href="/docs/config/" class="active">配置文件</a></li>
+    <li><a href="/docs/cli/">命令行</a></li>
+    <li><a href="/docs/plugins/">插件</a></li>
+    <li><a href="/docs/deploy/">部署</a></li>
+    <li><a href="/docs/faq/">常见问题</a></li>
+  </ul>
+</nav>
+<div class="content">
+<main>
+<h1>配置文件</h1>
+<p>Lumen 在项目根目录读 <code>lumen.toml</code>。没有这个文件时全部用默认值；只写想改的那几项就行，其余照旧。</p>
+<h2>基本结构</h2>
+<p>配置文件分三节：<code>[site]</code> 管站点信息，<code>[build]</code> 管构建，<code>[serve]</code> 管本地预览。下面是一份最小的例子：</p>
+<pre><code class="language-toml">[site]
+title = "我的笔记"
+base_url = "https://notes.example.net/"
+
+[build]
+out_dir = "public"
+</code></pre>
+<h2>选项</h2>
+<h3>build 一节</h3>
+<p>构建相关的选项都放在 <code>[build]</code> 下面。</p>
+<table>
+  <thead><tr><th>选项</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>out_dir</code></td><td>字符串</td><td><code>"dist"</code></td><td>输出目录，相对项目根目录</td></tr>
+    <tr><td><code>minify</code></td><td>布尔</td><td><code>true</code></td><td>是否压缩 HTML、CSS 和 JS</td></tr>
+    <tr><td><code>drafts</code></td><td>布尔</td><td><code>false</code></td><td>是否构建草稿</td></tr>
+  </tbody>
+</table>
+<h3>serve 一节</h3>
+<p>本地预览默认监听 <code>127.0.0.1:4000</code>。要让局域网里的手机也能看，把 <code>host</code> 改成 <code>0.0.0.0</code>。</p>
+<div class="admonition warning"><p class="admonition-title">注意</p><p>改了 <code>[serve]</code> 以后要重启 <code>lumen serve</code> 才生效，热重载只管内容文件。</p></div>
+<h2>环境变量</h2>
+<p>每个选项都能用环境变量覆盖，名字是 <code>LUMEN_</code> 加上节名和选项名的大写，比如 <code>LUMEN_BUILD_OUT_DIR</code>。详见<a href="../cli/#env">命令行</a>一页。</p>
+<ol>
+  <li>命令行参数优先级最高；</li>
+  <li>其次是环境变量；</li>
+  <li>最后才是配置文件。</li>
+</ol>
+</main>
+<aside class="toc"><p>本页目录</p><ul><li><a href="#基本结构">基本结构</a></li><li><a href="#选项">选项</a></li><li><a href="#环境变量">环境变量</a></li></ul></aside>
+</div>
+<footer><a href="https://github.example.com/lumen/docs/edit/main/config.md">在 GitHub 上编辑此页</a> · 最后更新于 2026-09-01</footer>
+</body>
+</html>

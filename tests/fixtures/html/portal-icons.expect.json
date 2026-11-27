@@ -1,0 +1,13 @@
+{
+  "about": "Phase 3（维普、知网海外站首页）：图标字体的空 <i> 不留一对空的 *；javascript: 的链接只留文字",
+  "url": "https://www.example-scholar.cn/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "示例学术网",
+  "needs_js": false,
+  "article": {
+    "contains": ["示例学术网收录中文期刊一万余种", "支持国标、APA 和 MLA 三种格式"],
+    "excludes": ["**", "javascript:"]
+  },
+  "full": {"contains": ["产品服务"], "excludes": []}
+}

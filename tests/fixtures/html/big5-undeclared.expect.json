@@ -1,0 +1,10 @@
+{
+  "about": "没声明编码的 Big5 繁体页，网址是 .com（没有地区提示）：chardetng 探测",
+  "url": "https://cu.example.com/news/spring.html",
+  "kind": "html",
+  "encoding": "Big5",
+  "title": "社區大學春季課程開始報名",
+  "needs_js": false,
+  "article": {"contains": ["六十五歲以上長者與身心障礙者可享學費減半優惠"], "excludes": []},
+  "full": {"contains": ["名額有限，額滿為止。"], "excludes": []}
+}

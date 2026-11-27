@@ -1,0 +1,6 @@
+{
+  "about": "不是网页：MP3 音频（ID3 头）",
+  "sample": "song.mp3",
+  "url": "https://files.example.com/song.mp3",
+  "not_web": "audio"
+}

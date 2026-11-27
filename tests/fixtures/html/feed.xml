@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>Field Notes</title>
+  <link>https://blog.example.org/</link>
+  <description>Notes on running services</description>
+  <item>
+    <title>Retrying HTTP requests without making things worse</title>
+    <link>https://blog.example.org/2026/retries/</link>
+    <pubDate>Wed, 04 Mar 2026 08:00:00 GMT</pubDate>
+  </item>
+</channel>
+</rss>

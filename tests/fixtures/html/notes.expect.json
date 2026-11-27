@@ -1,0 +1,14 @@
+{
+  "about": "纯文本：原样交回，分段按空行",
+  "url": "",
+  "content_type": "text/plain",
+  "kind": "text",
+  "encoding": "UTF-8",
+  "needs_js": false,
+  "article": {
+    "contains": ["一、下周一起停用旧的报销系统"],
+    "excludes": [],
+    "blocks": [{"contains": "新系统的账号已经开好", "kind": "paragraph", "path": []}]
+  },
+  "full": {"contains": ["三、有问题找财务部的值班同事。"], "excludes": []}
+}
