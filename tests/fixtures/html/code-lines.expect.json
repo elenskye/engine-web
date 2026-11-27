@@ -1,0 +1,21 @@
+{
+  "about": "本机核对（react.dev）：代码高亮逐行一个 <div>、行尾 <br>，转 Markdown 不能挤成一行、丢缩进；复制按钮不进代码",
+  "url": "https://fernkit.example.dev/learn/first-component",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Your first component",
+  "article": {
+    "contains": ["function MyButton() {\n  return (\n    <button>I'm a button</button>\n  );\n}", "export default function App() {\n  return <MyButton />;\n}"],
+    "excludes": ["Copy"],
+    "blocks": [
+      {"contains": "  return <MyButton />;", "kind": "code", "path": ["Using it"]}
+    ]
+  },
+  "full": {
+    "contains": [],
+    "excludes": ["Copy"],
+    "blocks": [
+      {"contains": "function MyButton() {\n  return (", "kind": "code", "path": []}
+    ]
+  }
+}

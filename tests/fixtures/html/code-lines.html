@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Your first component – Fernkit</title></head>
+<body>
+<nav><a href="/learn">Learn</a> <a href="/reference">Reference</a></nav>
+<main><article>
+<h1>Your first component</h1>
+<p>Fernkit apps are made out of components. A component is a piece of the interface that has its own logic and appearance, and it can be as small as a button or as large as an entire page.</p>
+<p>Components are plain functions that return markup. Here is the smallest one you can write:</p>
+<pre class="cm"><code class="language-js"><div class="cm-line"><span class="kw">function</span> <span class="def">MyButton</span>() {<br/></div><div class="cm-line">  <span class="kw">return</span> (<br/></div><div class="cm-line">    &lt;button&gt;I'm a button&lt;/button&gt;<br/></div><div class="cm-line">  );<br/></div><div class="cm-line">}<br/></div></code><button class="copy">Copy</button></pre>
+<h2>Using it</h2>
+<p>Once a component is declared you can nest it inside another one, the same way you would nest ordinary tags:</p>
+<pre><code>export default function App() {<br>  return &lt;MyButton /&gt;;<br>}</code></pre>
+</article></main>
+</body>
+</html>

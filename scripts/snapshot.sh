@@ -19,7 +19,7 @@ grep -v '^[[:space:]]*\(#\|$\)' "$list" | while IFS= read -r url; do
     continue
   fi
   tmp="$dir/.$num.part"
-  info="$(curl -sS -L --max-redirs 5 --max-time 40 --max-filesize 26214400 \
+  info="$(curl -sS -L --compressed --max-redirs 5 --max-time 40 --max-filesize 26214400 \
     -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) engine-web-snapshot/0.2" \
     -o "$tmp" -w '%{http_code}\t%{content_type}\t%{url_effective}' "$url")" || { echo "$num 抓不到：$url" >&2; rm -f "$tmp"; continue; }
   code="$(printf '%s' "$info" | cut -f1)"

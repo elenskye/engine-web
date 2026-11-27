@@ -1,0 +1,13 @@
+{
+  "about": "本机核对：短新闻末尾一句「本文版权所有」不算页脚，不能退回整个 body 把导航、热门推荐、页脚带进来",
+  "url": "https://evening.example.com/city/2026/heating.html",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "示例市今冬供暖提前启动",
+  "needs_js": false,
+  "article": {
+    "contains": ["市民如遇家中暖气不热，可拨打供热服务热线反映", "（本文版权所有，未经授权不得转载）"],
+    "excludes": ["热门推荐", "彩票开奖", "示ICP备", "广告服务"]
+  },
+  "full": {"contains": ["热门推荐", "示ICP备00000000号"], "excludes": []}
+}

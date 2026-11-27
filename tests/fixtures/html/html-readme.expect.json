@@ -1,0 +1,30 @@
+{
+  "about": "本机核对（GitHub 上 rust-lang 的 README）：.md 文件开头是 <div align=\"center\">，网址是 .md、Content-Type 是 text/plain，还是 Markdown",
+  "url": "https://raw.example.com/heron/main/README.md",
+  "content_type": "text/plain; charset=utf-8",
+  "kind": "markdown",
+  "encoding": "UTF-8",
+  "title": "Heron",
+  "article": {
+    "contains": [
+      "# Heron",
+      "heron new my-site"
+    ],
+    "excludes": [],
+    "blocks": [
+      {
+        "contains": "heron serve",
+        "kind": "code",
+        "path": [
+          "Quick start"
+        ]
+      }
+    ]
+  },
+  "full": {
+    "contains": [
+      "# Heron"
+    ],
+    "excludes": []
+  }
+}

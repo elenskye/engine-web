@@ -1,0 +1,30 @@
+{
+  "about": "本机核对（维基、Nature、arXiv）：链接标题去掉（和链接文字重复、或整条参考文献）；网址里成对的括号不断；空的 mailto: 只留文字，不拼到网址上",
+  "url": "https://wiki.example.org/wiki/Heron_survey",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Heron survey",
+  "site": "Example Encyclopedia",
+  "article": {
+    "contains": [
+      "[ISBN](https://wiki.example.org/wiki/ISBN_(identifier))",
+      "[DOI](https://wiki.example.org/wiki/Digital_object_identifier)",
+      "replaced by an address listed on the data portal in 2019",
+      "Moss, A. \"Designing the Heron survey\" (2005)."
+    ],
+    "excludes": [
+      "\"ISBN (identifier)\"",
+      "wiki/mailto:",
+      "\"Digital object identifier\""
+    ],
+    "links": [
+      "https://wiki.example.org/wiki/ISBN_(identifier)"
+    ]
+  },
+  "full": {
+    "contains": [
+      "Each round is published with an ISBN and a DOI."
+    ],
+    "excludes": []
+  }
+}

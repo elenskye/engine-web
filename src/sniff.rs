@@ -54,6 +54,10 @@ pub fn sniff(bytes: &[u8], content_type: Option<&str>, url: &str) -> Result<Kind
     {
         return Ok(Kind::Json);
     }
+    // 说是 Markdown 的（扩展名或 Content-Type）：里面夹着 HTML 标签也还是 Markdown（GitHub 的 README 常以 `<div align="center">` 开头）
+    if ct.contains("markdown") || ext == "md" || ext == "markdown" {
+        return Ok(Kind::Markdown);
+    }
     let looks_html = [
         "<!doctype html",
         "<html",
@@ -78,16 +82,27 @@ pub fn sniff(bytes: &[u8], content_type: Option<&str>, url: &str) -> Result<Kind
     if ct.ends_with("/xml") || ct.ends_with("+xml") || ext == "xml" {
         return Ok(Kind::Xml);
     }
-    if ct.contains("markdown") || ext == "md" || ext == "markdown" {
-        return Ok(Kind::Markdown);
-    }
     Ok(Kind::Text)
+}
+
+/// PDF 的文件头：在开头，或者前 1 KB 里、前面只有空白或二进制的垃圾字节（阅读器也这样容忍）。
+/// 前面是文字的不算：讲 PDF 格式的网页标题里写着「%PDF-1.7」。
+fn pdf_header(bytes: &[u8]) -> bool {
+    let head = &bytes[..bytes.len().min(1024)];
+    let Some(at) = head.windows(5).position(|w| w == b"%PDF-") else {
+        return false;
+    };
+    let before = &head[..at];
+    before.iter().all(u8::is_ascii_whitespace)
+        || std::str::from_utf8(before).is_err()
+        || before
+            .iter()
+            .any(|b| *b < 0x09 || (0x0E..0x20).contains(b) || *b == 0x7F)
 }
 
 /// 开头的魔数。
 fn magic(bytes: &[u8]) -> Option<Binary> {
-    let head = &bytes[..bytes.len().min(1024)];
-    if head.windows(5).any(|w| w == b"%PDF-") {
+    if pdf_header(bytes) {
         return Some(Binary::Pdf);
     }
     if bytes.starts_with(b"PK\x03\x04") || bytes.starts_with(b"PK\x05\x06") {
@@ -250,6 +265,24 @@ mod tests {
             Err(Binary::Pdf)
         );
         assert_eq!(
+            sniff(b"\r\n\x00\x9f junk %PDF-1.7\n", None, ""),
+            Err(Binary::Pdf),
+            "前面是垃圾字节"
+        );
+        assert_eq!(
+            sniff(
+                b"<!doctype html><title>What does %PDF-1.7 mean?</title>",
+                None,
+                ""
+            ),
+            Ok(Kind::Html),
+            "网页里写着 %PDF- 的不算"
+        );
+        assert_eq!(
+            sniff("文件开头是 %PDF-1.7".as_bytes(), None, ""),
+            Ok(Kind::Text)
+        );
+        assert_eq!(
             sniff(b"plain words", Some("image/png"), ""),
             Err(Binary::Image),
             "像文字、看不出来：参考 Content-Type"
@@ -271,6 +304,20 @@ mod tests {
             Ok(Kind::Markdown)
         );
         assert_eq!(sniff(b"# Title\n\ntext", None, ""), Ok(Kind::Text));
+        assert_eq!(
+            sniff(
+                b"<div align=\"center\"><img src=\"logo.svg\"></div>\n\n# Rust\n",
+                Some("text/plain; charset=utf-8"),
+                "https://raw.example.com/rust/README.md"
+            ),
+            Ok(Kind::Markdown),
+            "夹着 HTML 的 README 还是 Markdown"
+        );
+        assert_eq!(
+            sniff(b"<!DOCTYPE html><html>", None, "page.md"),
+            Ok(Kind::Html),
+            "整页 HTML 不看扩展名"
+        );
         assert_eq!(
             sniff(br#"{"html": "<div>x</div>"}"#, None, ""),
             Ok(Kind::Json),

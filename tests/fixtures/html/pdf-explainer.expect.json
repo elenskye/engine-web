@@ -1,0 +1,12 @@
+{
+  "about": "本机核对：讲 PDF 格式的网页，开头 1 KB 里写着 %PDF-1.7，不能当成 PDF",
+  "url": "https://notes.example.org/pdf-header",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "What does the %PDF-1.7 header mean?",
+  "article": {
+    "contains": ["Every PDF file begins with a header line such as `%PDF-1.7`."],
+    "excludes": []
+  },
+  "full": {"contains": ["Most readers search the first kilobyte for it"], "excludes": []}
+}

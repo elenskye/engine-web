@@ -1,5 +1,5 @@
 {
-  "about": "Phase 3（BBC）：dom_query 把正文里的 \" 也转义成 \\\"，要还原；链接标题里的 \\\" 留着、别的转义（v2\\.1）照常还原",
+  "about": "Phase 3（BBC）：dom_query 把正文里的 \" 也转义成 \\\"，要还原；链接标题（里面有转义的引号）整个去掉",
   "url": "https://news.example.com/2026/11/cycle-lanes",
   "kind": "html",
   "encoding": "UTF-8",
@@ -7,8 +7,15 @@
   "site": "Example Times",
   "needs_js": false,
   "article": {
-    "contains": ["\"the biggest change to our streets in a generation\"", "\"We lose forty parking spaces,\" said one baker", "[full proposal](https://news.example.com/docs/cycle-plan.pdf \"The \\\"River Route\\\" plan v2.1\")"],
-    "excludes": ["\\\"the biggest"]
+    "contains": [
+      "\"the biggest change to our streets in a generation\"",
+      "\"We lose forty parking spaces,\" said one baker",
+      "[full proposal](https://news.example.com/docs/cycle-plan.pdf)"
+    ],
+    "excludes": ["\\\"the biggest", "River Route"]
   },
-  "full": {"contains": ["\"and nobody asked us.\""], "excludes": []}
+  "full": {
+    "contains": ["\"and nobody asked us.\""],
+    "excludes": []
+  }
 }

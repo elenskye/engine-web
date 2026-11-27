@@ -179,11 +179,8 @@ pub(crate) fn from_markdown(md: &str) -> Vec<Raw> {
             }
             continue;
         }
+        // 不是新块的一行接在上一段（或上一项）后面，缩不缩进都算（CommonMark 的「懒续行」：项里用 <br> 断行的文字）
         if para.is_empty() {
-            para_kind = BlockKind::Paragraph;
-        } else if para_kind == BlockKind::ListItem && !line.starts_with([' ', '\t']) {
-            // 不缩进的一行不再是上一项的续行
-            flush(&mut para, para_kind, &mut out);
             para_kind = BlockKind::Paragraph;
         }
         para.push(line.to_string());
@@ -387,12 +384,12 @@ fn code_spans(s: &str, inner: impl Fn(&str) -> String) -> String {
     while let Some(start) = rest.find('`') {
         let run = rest[start..].chars().take_while(|c| *c == '`').count();
         let after = &rest[start + run..];
-        let close = (0..after.len())
-            .filter(|&i| after.is_char_boundary(i))
+        let ticks = "`".repeat(run);
+        let close = after
+            .match_indices(ticks.as_str())
+            .map(|(i, _)| i)
             .find(|&i| {
-                after[i..].starts_with(&"`".repeat(run))
-                    && !after[i + run..].starts_with('`')
-                    && (i == 0 || !after[..i].ends_with('`'))
+                !after[i + run..].starts_with('`') && (i == 0 || !after[..i].ends_with('`'))
             });
         match close {
             Some(end) => {
@@ -486,6 +483,23 @@ mod tests {
         // 没有一级标题：二级标题照常进路径
         let b = blocks("## 小节\n\n正文", Some("小节"));
         assert_eq!(b[1].0, "〈小节〉第 2 段");
+    }
+
+    #[test]
+    fn list_items_keep_their_broken_lines() {
+        // 列表项里用 <br> 断行，转出来下一行不缩进：还是这一项
+        let b = blocks(
+            "- 国家自然科学  \n基金委员会官方\n- 科金谭  \n哔哩哔哩\n\n下一段",
+            None,
+        );
+        assert_eq!(
+            b.iter().map(|b| (b.1.as_str(), b.2)).collect::<Vec<_>>(),
+            [
+                ("国家自然科学\n基金委员会官方", "list_item"),
+                ("科金谭\n哔哩哔哩", "list_item"),
+                ("下一段", "paragraph")
+            ]
+        );
     }
 
     #[test]

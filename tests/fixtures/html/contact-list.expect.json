@@ -1,0 +1,22 @@
+{
+  "about": "本机核对（自然科学基金委首页）：列表项里用 <br> 断行，转出来的续行不缩进，还是同一项，不能拆成一项加一段",
+  "url": "https://fund.example.org/lxwm/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "联系我们",
+  "article": {
+    "contains": ["项目申请咨询"],
+    "excludes": [],
+    "blocks": [
+      {"contains": "项目申请咨询\n工作日 9:00—17:00\n电话 010-00000001", "kind": "list_item", "path": ["咨询方式"]},
+      {"contains": "官方公众号\n示例科学基金会", "kind": "list_item", "path": ["咨询方式"]}
+    ]
+  },
+  "full": {
+    "contains": [],
+    "excludes": [],
+    "blocks": [
+      {"contains": "评审与结题咨询\n工作日 9:00—17:00\n电话 010-00000002", "kind": "list_item", "path": ["咨询方式"]}
+    ]
+  }
+}

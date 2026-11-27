@@ -1,0 +1,10 @@
+{
+  "about": "本机核对：标签大写的 <SCRIPT> 也算脚本（原来按字面数 <script，漏了）；JSON-LD 数据块不算",
+  "url": "https://ledger.example.com/app",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Ledger",
+  "needs_js": true,
+  "article": {"contains": ["Loading your ledger"], "excludes": ["WebApplication"]},
+  "full": {"contains": ["Loading your ledger"], "excludes": ["WebApplication"]}
+}
