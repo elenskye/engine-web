@@ -80,6 +80,15 @@ engine-web 是 Peck、Pith、Pomelo 共用的网页引擎（独立 Rust 库）�
 - 云端是 Linux，跑不了 PDFKit、Vision、借 Office 导出，也拿不到站主本机的真实文件和密钥。这些只在本机做。
 - 接入某个 App（Peck、Pith、Pomelo）的改动在那个 App 的仓库里做，守它自己的 `CLAUDE.md`（版本、Git、边界）。在引擎仓库的会话里，三个 App 仓库只读。
 
+### 改用到的引擎（2026-11-27 站主定，总仓库 `docs/decisions/0009`）
+
+- **能改谁**：一个引擎或 App 用到另一个引擎（`Cargo.toml` 里依赖它，或当期版本正在接它），它的本机会话就能直接改那个引擎、照那边的规矩提交和打 tag，不用另开会话、不用先问；隔几层用到的也算（Pith → engine-pdf → engine-core）。反过来不行：引擎的会话里 App 仓库只读，没用到的引擎也只读。云端 Claude 仍只做 engine-web。
+- **先读**：动之前读那个引擎的 `CLAUDE.md`、`HANDOFF.md`、`ROADMAP.md`；`git status` 里有别人没提交的改动，不动、先问。
+- **照它的规矩**：检查、版本、Git、边界都按被改引擎的 `CLAUDE.md`；分工照它的「二」（本机 Claude commit、打 tag，Codex 只改文件、交本机 Claude 审）。它的 `CHANGELOG.md`、`HANDOFF.md` 照常更新。
+- **接口**：加新接口、修 Bug 直接做；改名、删掉、改已有行为这类会让它别的调用方升级时要跟着改的，先问站主。
+- **版本**：被改引擎的版本号照它自己的走。修 Bug、小改升补丁号，做完就打 tag；新增功能升次版本号，计划写进调用方当期的 Phase 计划（站主看那一份就够），那部分做完就打 tag。
+- **先后**：被改引擎先提交、打 tag，调用方再钉新 tag。新 tag 推上 GitHub 之前，调用方可以在 `Cargo.toml` 加 `[patch."https://github.com/elenskye/engine-<名>"]` 指本机路径接着开发和提交，`HANDOFF.md` 记一笔；调用方发版（打 tag、App 装正式版）前改回钉已推上去的 tag。每轮汇报按仓库列 commit 和 tag，写清先推哪个（被用的先推）。
+
 ## 三、版本
 
 - 版本号 `x.y.z`，写在 `Cargo.toml`（和 `Cargo.lock`）里，`src/lib.rs` 的版本测试一起改。从 0.1.0 起。
