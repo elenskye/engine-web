@@ -2,14 +2,14 @@
 
 Peck、Pith、Pomelo 共用的网页引擎（Rust 库）：搜索、抓取、取正文一起管。App 交进网址、字节或搜索词，拿回标题、Markdown 正文、链接和元数据，或者搜索结果和花费；怎么联网、要不要登录、结果存哪归各 App。
 
-> 现在在做 **v0.2.0**（取正文 + `web_extract`、`web_find` 工具包）：Phase 1–4 在云端分支 `cloud/v0.2` 上做完（含 36 个真实网页的核对），等本机审核，还没发版。进度见 `ROADMAP.md`，交接见 `HANDOFF.md`，设计见 `docs/design.md`。
+> **v0.2.0**（取正文 + `web_extract`、`web_find` 工具包 + 命令行）：在云端分支 `cloud/v0.2` 上做完，等本机验收、合并、打 tag。这一版的接口和 App 怎么接见 `CHANGELOG.md`，验收步骤见 `HANDOFF.md`，进度见 `ROADMAP.md`，设计见 `docs/design.md`。
 
-## 计划的能力
+## 能力
 
-- **取正文**（v0.2）：网页字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别（GBK 等不乱码）、类型判断、「可能要开 JavaScript」的提示；抽正文和全部文字两种模式。
+- **取正文**（v0.2，已做）：网页字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别（GBK、Big5、Shift_JIS 等不乱码）、类型判断（PDF、图片、Office 等认出来交回 App）、「可能要开 JavaScript」的提示；抽正文和全部文字两种模式；`find` 在网页里找字。
 - **抓取和搜索**（v0.3）：网址 → 内容，带跳转、超时、大小上限，默认不抓本机和内网；Tavily 的搜索、取页、爬站、站内地图，交回点数和花费，爬站先报价。
 - **站点规则**（v0.5）：知网文献页、arXiv 摘要页、维基百科、GitHub 的 README 和 issue；文章里的图；多页文章合并。
-- **给 Agent 的工具包**：`web_search`、`web_fetch`、`web_extract`、`web_crawl`、`web_map`、`web_find`，一份工具清单出 Rust 接口、App 里的工具和命令行（格式来自 engine-core）。
+- **给 Agent 的工具包**：`web_extract`、`web_find`（v0.2，已做）；`web_search`、`web_fetch`、`web_crawl`、`web_map`（v0.3）。一份工具清单出 Rust 接口、App 里的工具和命令行（格式来自 engine-core）。
 
 ## App 怎么引用
 
@@ -31,7 +31,7 @@ let article = extract(&bytes, Some("text/html; charset=gbk"), "https://example.c
 article.title;      // 标题
 article.markdown;   // Markdown 正文（article 模式）或全部文字（Mode::Full）
 article.blocks;     // 分段：Block { heading_path, paragraph, kind, text }，block.label() 是「〈引言 › 方法〉第 3 段」
-article.needs_js;   // 正文很短、脚本很多：可能要开 JavaScript
+article.needs_js;   // 正文很短而有脚本：可能要开 JavaScript
 ```
 
 不是网页（PDF、图片、Office、压缩包、音视频）交 `Error::NotWeb(Binary)`，App 再交给别的引擎。单独用的：`sniff`（类型）、`decode`（编码）、`find`（在 `Article` 里找字，位置是「〈小标题路径〉第 N 段」）。

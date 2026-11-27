@@ -168,7 +168,7 @@ fn web_extract(
         article.blocks.len()
     );
     if article.needs_js {
-        text += "正文很短而脚本很多：内容可能要开 JavaScript 才出来，下面的不一定全。\n";
+        text += "正文很短而有脚本：内容可能要开 JavaScript 才出来，下面的不一定全。\n";
     }
     text += DATA_NOTE;
     text += &format!(
@@ -223,9 +223,11 @@ fn web_extract(
     })
 }
 
-/// 正文里的 `</web-page>` 换掉，不让网页里的字假装结果结束了。
+/// 正文里的 `</web-page>`（不分大小写）换掉，不让网页里的字假装结果结束了。
 fn fence(segment: &str) -> String {
-    segment.replace("</web-page", "<\\/web-page")
+    static CLOSE: OnceLock<regex::Regex> = OnceLock::new();
+    let close = CLOSE.get_or_init(|| regex::Regex::new(r"(?i)</(web-page)").unwrap());
+    close.replace_all(segment, "<\\/$1").into_owned()
 }
 
 /// 从第 `offset` 个字起最多取 `max_chars` 个字；没到结尾时尽量断在段落（空行）或行尾。交回这一段和它的结尾（第几个字，不含）。
@@ -315,5 +317,6 @@ mod tests {
     #[test]
     fn page_text_cannot_close_the_wrapper() {
         assert_eq!(fence("a</web-page>b"), "a<\\/web-page>b");
+        assert_eq!(fence("a</WEB-Page >b"), "a<\\/WEB-Page >b");
     }
 }
