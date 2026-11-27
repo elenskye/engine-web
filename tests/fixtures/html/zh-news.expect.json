@@ -1,0 +1,34 @@
+{
+  "about": "中文新闻：导航、面包屑、侧栏、页脚噪声；表格；相对链接；带说明的图；隐藏的指令",
+  "url": "https://news.example.com/city/2026/line5-south.html",
+  "content_type": "text/html; charset=utf-8",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "示例市地铁五号线南延段通车",
+  "byline": "林晓雨",
+  "published": "2026-10-18T09:30:00+08:00",
+  "site": "示例日报",
+  "lang": "zh-CN",
+  "needs_js": false,
+  "article": {
+    "contains": [
+      "南延段全长 12.6 公里，新设 8 座车站",
+      "](https://news.example.com/city/2026/metro-guide.html)",
+      "（图：南延段滨江新城站站台）",
+      "| 滨江新城 | 6:00 | 23:36 | 城际铁路 |",
+      "学生凭学生卡打五折"
+    ],
+    "excludes": ["版权所有", "三号线二期开工", "搜索新闻", "本文已失效", "dataLayer", "/img/2026/line5-south.jpg"],
+    "links": ["https://news.example.com/city/2026/metro-guide.html"],
+    "blocks": [
+      {"contains": "滨江新城\t6:00\t23:36\t城际铁路", "kind": "table_row", "path": ["各站首末班时间"]},
+      {"contains": "起步 2 元可乘 6 公里", "kind": "paragraph", "path": ["票价"]},
+      {"contains": "详细的换乘指引见五号线换乘指南。", "kind": "paragraph", "path": []}
+    ]
+  },
+  "full": {
+    "contains": ["首页 城市 财经", "南延段全长 12.6 公里，新设 8 座车站", "滨江新城\t6:00\t23:36\t城际铁路", "三号线二期开工", "版权所有"],
+    "excludes": ["本文已失效", "dataLayer"],
+    "links": ["https://news.example.com/city/2026/metro-guide.html", "https://news.example.com/about/"]
+  }
+}

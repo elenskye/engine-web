@@ -1,0 +1,37 @@
+{
+  "about": "英文博客：JSON-LD 作者和日期；代码块带语言；行内代码；列表；引用；没有 thead 的表格；../ 相对链接；导航、侧栏、页脚",
+  "url": "https://blog.example.org/2026/retries/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Retrying HTTP requests without making things worse",
+  "byline": "Dana Whitfield",
+  "published": "2026-03-04T08:00:00Z",
+  "site": "Field Notes",
+  "lang": "en",
+  "needs_js": false,
+  "article": {
+    "contains": [
+      "a short outage turns into a long one",
+      "fn delay(attempt: u32, base_ms: u64, cap_ms: u64) -> u64 {",
+      "let ceiling = cap_ms.min(base_ms << attempt);",
+      "`Idempotency-Key`",
+      "| 503 | yes | yes |",
+      "](https://blog.example.org/2025/timeouts/)",
+      "](https://www.rfc-editor.org/rfc/rfc9110#section-10.2.3)",
+      "（图：Retry budget chart）"
+    ],
+    "excludes": ["Popular posts", "Subscribe to the newsletter", "All rights reserved", "Archive"],
+    "links": ["https://blog.example.org/2025/timeouts/", "https://www.rfc-editor.org/rfc/rfc9110#section-10.2.3"],
+    "blocks": [
+      {"contains": "let ceiling = cap_ms.min(base_ms << attempt);", "kind": "code", "path": ["Rule 1: back off exponentially, with jitter"]},
+      {"contains": "Retry POST only with an Idempotency-Key header.", "kind": "list_item", "path": ["Rule 2: only retry what is safe to repeat"]},
+      {"contains": "503\tyes\tyes", "kind": "table_row", "path": ["Rule 3: keep a retry budget"]},
+      {"contains": "If you only read one section, read the one about budgets.", "kind": "paragraph", "path": []}
+    ]
+  },
+  "full": {
+    "contains": ["Home\nArchive", "a short outage turns into a long one", "    let ceiling = cap_ms.min(base_ms << attempt);", "503\tyes\tyes", "Popular posts", "All rights reserved"],
+    "excludes": ["schema.org", "Sign up"],
+    "links": ["https://blog.example.org/2025/timeouts/", "https://blog.example.org/2025/queues/"]
+  }
+}

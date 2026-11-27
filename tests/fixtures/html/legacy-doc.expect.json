@@ -1,0 +1,6 @@
+{
+  "about": "不是网页：旧版 Word（.doc，OLE 复合文档）",
+  "sample": "legacy.doc",
+  "url": "https://files.example.com/legacy.doc",
+  "not_web": "word"
+}

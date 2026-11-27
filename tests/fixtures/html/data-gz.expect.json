@@ -1,0 +1,6 @@
+{
+  "about": "不是网页：gzip 压缩文件",
+  "sample": "data.gz",
+  "url": "https://files.example.com/data.gz",
+  "not_web": "archive"
+}

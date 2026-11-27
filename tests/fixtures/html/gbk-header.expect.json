@@ -1,0 +1,11 @@
+{
+  "about": "编码只在 HTTP 头里写（charset=GBK）",
+  "url": "http://water.example.cn/notice/1130.html",
+  "content_type": "text/html; charset=GBK",
+  "kind": "html",
+  "encoding": "GBK",
+  "title": "停水通知",
+  "needs_js": false,
+  "article": {"contains": ["东城区和平路以北的居民小区将暂停供水"], "excludes": []},
+  "full": {"contains": ["放水几分钟后即可正常使用"], "excludes": []}
+}

@@ -1,0 +1,9 @@
+{
+  "about": "JSON 原文（没有 Content-Type，按内容认）：原样交回；里面的 <div> 不让它认成网页",
+  "url": "https://code.example.com/kestrel/releases/latest",
+  "kind": "json",
+  "encoding": "UTF-8",
+  "needs_js": false,
+  "article": {"contains": ["\"version\": \"0.9.2\"", "<div> in notes is just text"], "excludes": []},
+  "full": {"contains": ["\"version\": \"0.9.2\""], "excludes": []}
+}

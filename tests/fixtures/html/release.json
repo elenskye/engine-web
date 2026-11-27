@@ -1,0 +1,7 @@
+{
+  "name": "kestrel",
+  "version": "0.9.2",
+  "published": "2026-08-12",
+  "notes": "Faster change detection; <div> in notes is just text",
+  "assets": ["kestrel-x86_64-linux.tar.gz", "kestrel-aarch64-macos.tar.gz"]
+}

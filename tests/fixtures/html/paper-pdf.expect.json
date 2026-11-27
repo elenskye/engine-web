@@ -1,0 +1,7 @@
+{
+  "about": "不是网页：PDF（Content-Type 说是 text/html 也不信）",
+  "sample": "paper.pdf",
+  "url": "https://files.example.com/paper.pdf",
+  "content_type": "text/html",
+  "not_web": "pdf"
+}

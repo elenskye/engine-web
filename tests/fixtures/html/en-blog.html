@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrying HTTP requests without making things worse | Field Notes</title>
+<meta property="og:site_name" content="Field Notes">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Retrying HTTP requests without making things worse","author":{"@type":"Person","name":"Dana Whitfield"},"datePublished":"2026-03-04T08:00:00Z","publisher":{"@type":"Organization","name":"Field Notes"}}
+</script>
+</head>
+<body>
+<div class="topbar">
+  <nav aria-label="Main">
+    <ul class="menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="/archive/">Archive</a></li>
+      <li><a href="/tags/">Tags</a></li>
+      <li><a href="/about/">About</a></li>
+    </ul>
+  </nav>
+</div>
+<div class="layout">
+<main id="content">
+  <article class="post">
+    <header>
+      <h1>Retrying HTTP requests without making things worse</h1>
+      <p class="byline">By Dana Whitfield · March 4, 2026</p>
+    </header>
+    <p>Retries look harmless. A request fails, you send it again, and most of the time the second attempt works. The trouble starts when every client does the same thing at the same moment: a short outage turns into a long one because the recovering server is flooded with retries.</p>
+    <p>This post walks through the three rules we now follow in every service. None of them is new, but writing them down made our reviews faster. If you only read one section, read the one about <em>budgets</em>.</p>
+    <h2>Rule 1: back off exponentially, with jitter</h2>
+    <p>Wait longer after each failure, and add randomness so that clients spread out. The full-jitter variant picks a delay uniformly between zero and the current cap:</p>
+<pre><code class="language-rust">fn delay(attempt: u32, base_ms: u64, cap_ms: u64) -&gt; u64 {
+    let ceiling = cap_ms.min(base_ms &lt;&lt; attempt);
+    rand::random::&lt;u64&gt;() % (ceiling + 1)
+}
+</code></pre>
+    <p>We use <code>base_ms = 100</code> and <code>cap_ms = 10_000</code> for interactive calls.</p>
+    <h2>Rule 2: only retry what is safe to repeat</h2>
+    <p>A retry is a second copy of the request. That is fine for reads and for writes that carry an idempotency key, and dangerous for everything else.</p>
+    <ul>
+      <li>Retry <code>GET</code>, <code>HEAD</code> and <code>PUT</code> freely.</li>
+      <li>Retry <code>POST</code> only with an <code>Idempotency-Key</code> header.</li>
+      <li>Never retry on <code>400</code> or <code>422</code>: the request itself is wrong.</li>
+    </ul>
+    <h2>Rule 3: keep a retry budget</h2>
+    <p>Cap retries at a fraction of normal traffic, for example ten percent over a rolling minute. When the budget is spent, fail fast and let the caller decide.</p>
+    <blockquote><p>A retry budget turns a thundering herd into a polite queue.</p></blockquote>
+    <table>
+      <tr><th>Status</th><th>Retry?</th><th>Honour Retry-After?</th></tr>
+      <tr><td>429</td><td>yes</td><td>yes</td></tr>
+      <tr><td>503</td><td>yes</td><td>yes</td></tr>
+      <tr><td>500</td><td>with budget</td><td>no</td></tr>
+    </table>
+    <p>More background is in our earlier post on <a href="../2025/timeouts/">choosing timeouts</a> and in the <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.2.3">Retry-After section of RFC 9110</a>.</p>
+    <p><img src="/images/retry-budget.png" alt="Retry budget chart"></p>
+  </article>
+</main>
+<aside class="sidebar">
+  <h3>Popular posts</h3>
+  <ul><li><a href="/2025/queues/">Queues are not a free lunch</a></li><li><a href="/2024/logs/">Structured logs in practice</a></li></ul>
+  <form class="newsletter"><label>Subscribe to the newsletter</label><input type="email"><button>Sign up</button></form>
+</aside>
+</div>
+<footer><p>© 2026 Field Notes. All rights reserved.</p></footer>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "about": "正文很短的页（不到 200 字）：退回整个 <body>，但仍去掉导航和页脚",
+  "url": "https://www.example.com/help/old.html",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "页面已迁移",
+  "needs_js": false,
+  "article": {
+    "contains": ["旧版帮助中心已于 2026 年 6 月停止更新", "[新版帮助中心](https://www.example.com/support/help/)"],
+    "excludes": ["产品", "© 2026 示例科技"],
+    "links": ["https://www.example.com/support/help/"]
+  },
+  "full": {
+    "contains": ["首页 产品 支持", "旧版帮助中心已于 2026 年 6 月停止更新，请访问新版帮助中心。", "© 2026 示例科技"],
+    "excludes": []
+  }
+}

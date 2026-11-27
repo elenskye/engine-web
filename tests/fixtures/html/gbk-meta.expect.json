@@ -1,0 +1,13 @@
+{
+  "about": "meta 声明 gb2312、字节是 GBK（GB2312 以外的字「镕」「堃」也要对）；表格",
+  "url": "https://jwc.example.edu.cn/info/2026/0610.htm",
+  "kind": "html",
+  "encoding": "GBK",
+  "title": "示例大学 2026 年优秀毕业论文名单公示",
+  "needs_js": false,
+  "article": {
+    "contains": ["公示期为五个工作日", "| 材料学院 | 王镕 | 高熵合金的低温韧性研究 |", "| 文学院 | 李堃 | 宋代笔记中的市井饮食 |"],
+    "excludes": []
+  },
+  "full": {"contains": ["材料学院\t王镕\t高熵合金的低温韧性研究"], "excludes": []}
+}

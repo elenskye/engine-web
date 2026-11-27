@@ -1,0 +1,25 @@
+{
+  "about": "Markdown 原文（Content-Type 是 text/markdown）：原样交回，分段按 Markdown 的标题、列表、表格、代码块",
+  "url": "https://code.example.com/kestrel/README.md",
+  "content_type": "text/markdown; charset=utf-8",
+  "kind": "markdown",
+  "encoding": "UTF-8",
+  "title": "Kestrel",
+  "needs_js": false,
+  "article": {
+    "contains": ["Kestrel is a small **task runner** for monorepos.", "cargo install kestrel --locked", "| `--jobs N` | run at most N tasks at once |"],
+    "excludes": [],
+    "blocks": [
+      {"contains": "Kestrel is a small task runner for monorepos.", "kind": "paragraph", "path": []},
+      {"contains": "cargo install kestrel --locked", "kind": "code", "path": ["Install"]},
+      {"contains": "Run kestrel run test to test the packages", "kind": "list_item", "path": ["Usage"]},
+      {"contains": "--jobs N\trun at most N tasks at once", "kind": "table_row", "path": ["Usage", "Options"]},
+      {"contains": "See the configuration guide for every key.", "kind": "paragraph", "path": ["Usage", "Options"]},
+      {"contains": "Kestrel never runs scripts from packages you did not list.", "kind": "paragraph", "path": ["Usage", "Options"]}
+    ]
+  },
+  "full": {
+    "contains": ["Kestrel is a small **task runner** for monorepos."],
+    "excludes": []
+  }
+}

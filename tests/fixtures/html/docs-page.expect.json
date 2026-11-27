@@ -1,0 +1,36 @@
+{
+  "about": "文档站：长侧栏目录、本页目录、多级小标题（标题路径）、选项表、TOML 代码块、有序列表、提示框",
+  "url": "https://lumen.example.net/docs/config/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "配置文件",
+  "site": "Lumen 文档",
+  "lang": "zh-Hans",
+  "needs_js": false,
+  "article": {
+    "contains": [
+      "Lumen 在项目根目录读 `lumen.toml`",
+      "base_url = \"https://notes.example.net/\"",
+      "| `minify` | 布尔 | `true` | 是否压缩 HTML、CSS 和 JS |",
+      "热重载只管内容文件",
+      "](https://lumen.example.net/docs/cli/#env)"
+    ],
+    "excludes": ["常见问题", "本页目录", "在 GitHub 上编辑此页"],
+    "links": ["https://lumen.example.net/docs/cli/#env"],
+    "blocks": [
+      {"contains": "minify\t布尔\ttrue\t是否压缩 HTML、CSS 和 JS", "kind": "table_row", "path": ["选项", "build 一节"]},
+      {"contains": "把 host 改成 0.0.0.0", "kind": "paragraph", "path": ["选项", "serve 一节"]},
+      {"contains": "其次是环境变量；", "kind": "list_item", "path": ["环境变量"]},
+      {"contains": "out_dir = \"public\"", "kind": "code", "path": ["基本结构"]},
+      {"contains": "serve 一节", "kind": "heading", "path": ["选项"]}
+    ]
+  },
+  "full": {
+    "contains": ["开始\n安装\n配置文件", "minify\t布尔\ttrue\t是否压缩 HTML、CSS 和 JS", "[build]\nout_dir = \"public\"", "本页目录", "在 GitHub 上编辑此页"],
+    "excludes": [],
+    "blocks": [
+      {"contains": "minify\t布尔\ttrue\t是否压缩 HTML、CSS 和 JS", "kind": "table_row", "path": ["选项", "build 一节"]},
+      {"contains": "其次是环境变量；", "kind": "list_item", "path": ["环境变量"]}
+    ]
+  }
+}
