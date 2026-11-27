@@ -73,6 +73,39 @@ const BIG5_META: &str = r#"<html>
 </html>
 "#;
 
+/// 没声明编码的 Big5 页（网址是 .com，没有地区提示）。
+const BIG5_UNDECLARED: &str = r#"<html>
+<head><title>社區大學春季課程開始報名</title></head>
+<body>
+<h1>社區大學春季課程開始報名</h1>
+<p>本學期共開設八十門課程，內容涵蓋語言、電腦、園藝、烹飪與攝影。課程每週上課一次，每次兩小時，學費依課程時數計算，六十五歲以上長者與身心障礙者可享學費減半優惠。</p>
+<p>報名方式分為網路報名與現場報名兩種。網路報名請至本校網站填寫表單，現場報名請攜帶身分證件至一樓服務台辦理。名額有限，額滿為止。</p>
+</body>
+</html>
+"#;
+
+/// 没声明编码的 Shift_JIS 页（.jp）。
+const SJIS_UNDECLARED: &str = r#"<html>
+<head><title>市立図書館の冬季開館時間について</title></head>
+<body>
+<h1>市立図書館の冬季開館時間について</h1>
+<p>十二月一日から三月末まで、市立図書館の開館時間は午前九時から午後五時半までとなります。毎週月曜日と年末年始は休館いたします。</p>
+<p>返却ポストは休館日も利用できます。予約した資料は、連絡を受けてから一週間以内に受け取ってください。ご理解とご協力をお願いいたします。</p>
+</body>
+</html>
+"#;
+
+/// 没声明编码的 windows-1252 法语页（.fr）。
+const LATIN_UNDECLARED: &str = r#"<html>
+<head><title>Horaires d'hiver de la médiathèque</title></head>
+<body>
+<h1>Horaires d'hiver de la médiathèque</h1>
+<p>À partir du 1er décembre, la médiathèque sera ouverte du mardi au dimanche de 9 h à 17 h 30. Le prêt reste gratuit pour tous les habitants de la commune, et les pénalités de retard sont supprimées pendant l'hiver.</p>
+<p>Les élèves peuvent réserver une salle de travail à l'accueil. Un café littéraire aura lieu chaque premier samedi du mois, à partir de 15 h, dans la salle polyvalente.</p>
+</body>
+</html>
+"#;
+
 fn main() {
     let dir = Path::new(DIR);
     encoded(
@@ -81,10 +114,10 @@ fn main() {
         GBK_UNDECLARED,
         encoding_rs::GBK,
         r#"
-  "about": "没声明编码的 GBK 中文页：不是合法的 UTF-8，退到 GB18030",
+  "about": "没声明编码的 GBK 中文页：不是合法的 UTF-8，chardetng 探测",
   "url": "http://lib.example.cn/news/2026/winter.html",
   "kind": "html",
-  "encoding": "gb18030",
+  "encoding": "GBK",
   "title": "示例县图书馆冬季开放时间调整",
   "needs_js": false,
   "article": {
@@ -143,6 +176,51 @@ fn main() {
   "full": {"contains": ["呈現臺灣東部的地景變化"], "excludes": []}"#,
     );
 
+    encoded(
+        dir,
+        "big5-undeclared",
+        BIG5_UNDECLARED,
+        encoding_rs::BIG5,
+        r#"
+  "about": "没声明编码的 Big5 繁体页，网址是 .com（没有地区提示）：chardetng 探测",
+  "url": "https://cu.example.com/news/spring.html",
+  "kind": "html",
+  "encoding": "Big5",
+  "title": "社區大學春季課程開始報名",
+  "needs_js": false,
+  "article": {"contains": ["六十五歲以上長者與身心障礙者可享學費減半優惠"], "excludes": []},
+  "full": {"contains": ["名額有限，額滿為止。"], "excludes": []}"#,
+    );
+    encoded(
+        dir,
+        "sjis-undeclared",
+        SJIS_UNDECLARED,
+        encoding_rs::SHIFT_JIS,
+        r#"
+  "about": "没声明编码的 Shift_JIS 日文页：chardetng 探测",
+  "url": "https://library.example.jp/news/winter.html",
+  "kind": "html",
+  "encoding": "Shift_JIS",
+  "title": "市立図書館の冬季開館時間について",
+  "needs_js": false,
+  "article": {"contains": ["市立図書館の開館時間は午前九時から午後五時半までとなります"], "excludes": []},
+  "full": {"contains": ["返却ポストは休館日も利用できます。"], "excludes": []}"#,
+    );
+    encoded(
+        dir,
+        "latin-undeclared",
+        LATIN_UNDECLARED,
+        encoding_rs::WINDOWS_1252,
+        r#"
+  "about": "没声明编码的 windows-1252 法语页：chardetng 探测（退 GB18030 会把重音字母解成汉字）",
+  "url": "https://mediatheque.example.fr/horaires.html",
+  "kind": "html",
+  "encoding": "windows-1252",
+  "title": "Horaires d'hiver de la médiathèque",
+  "needs_js": false,
+  "article": {"contains": ["À partir du 1er décembre, la médiathèque sera ouverte"], "excludes": []},
+  "full": {"contains": ["Un café littéraire aura lieu chaque premier samedi du mois"], "excludes": []}"#,
+    );
     binary(
         dir,
         "paper.pdf",

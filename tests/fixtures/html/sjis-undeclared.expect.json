@@ -1,0 +1,10 @@
+{
+  "about": "没声明编码的 Shift_JIS 日文页：chardetng 探测",
+  "url": "https://library.example.jp/news/winter.html",
+  "kind": "html",
+  "encoding": "Shift_JIS",
+  "title": "市立図書館の冬季開館時間について",
+  "needs_js": false,
+  "article": {"contains": ["市立図書館の開館時間は午前九時から午後五時半までとなります"], "excludes": []},
+  "full": {"contains": ["返却ポストは休館日も利用できます。"], "excludes": []}
+}

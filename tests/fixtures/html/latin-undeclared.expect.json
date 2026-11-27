@@ -1,0 +1,10 @@
+{
+  "about": "没声明编码的 windows-1252 法语页：chardetng 探测（退 GB18030 会把重音字母解成汉字）",
+  "url": "https://mediatheque.example.fr/horaires.html",
+  "kind": "html",
+  "encoding": "windows-1252",
+  "title": "Horaires d'hiver de la médiathèque",
+  "needs_js": false,
+  "article": {"contains": ["À partir du 1er décembre, la médiathèque sera ouverte"], "excludes": []},
+  "full": {"contains": ["Un café littéraire aura lieu chaque premier samedi du mois"], "excludes": []}
+}

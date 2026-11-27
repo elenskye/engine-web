@@ -2,7 +2,7 @@
 
 Peck、Pith、Pomelo 共用的网页引擎（Rust 库）：搜索、抓取、取正文一起管。App 交进网址、字节或搜索词，拿回标题、Markdown 正文、链接和元数据，或者搜索结果和花费；怎么联网、要不要登录、结果存哪归各 App。
 
-> 现在是 **v0.1.0**：只有计划和骨架，还没有可用的接口。进度见 `ROADMAP.md`，交接见 `HANDOFF.md`，设计见 `docs/design.md`。
+> 现在在做 **v0.2.0**（取正文）：Phase 1–2 在云端分支 `cloud/v0.2` 上做完，等本机审核和真实网页核对，还没发版。进度见 `ROADMAP.md`，交接见 `HANDOFF.md`，设计见 `docs/design.md`。
 
 ## 计划的能力
 
@@ -22,10 +22,30 @@ engine-web = { git = "https://github.com/elenskye/engine-web", tag = "v0.x.y" }
 
 升级改 tag，回退改回上一个 tag。每版接口变化见 `CHANGELOG.md`。
 
+## 取正文（v0.2）
+
+```rust
+use engine_web::{extract, ExtractOptions, Mode};
+
+let article = extract(&bytes, Some("text/html; charset=gbk"), "https://example.com/a.html", &ExtractOptions::default())?;
+article.title;      // 标题
+article.markdown;   // Markdown 正文（article 模式）或全部文字（Mode::Full）
+article.blocks;     // 分段：Block { heading_path, paragraph, kind, text }，block.label() 是「〈引言 › 方法〉第 3 段」
+article.needs_js;   // 正文很短、脚本很多：可能要开 JavaScript
+```
+
+不是网页（PDF、图片、Office、压缩包、音视频）交 `Error::NotWeb(Binary)`，App 再交给别的引擎。单独用的：`sniff`（类型）、`decode`（编码）。
+
 ## 开发
 
 ```bash
 ./scripts/check.sh
 ```
+
+```bash
+cargo run --example pages -- tests/fixtures/html
+```
+
+`examples/pages` 对一个目录里的每份网页跑两种模式，打印标题、字数、段数、开头几行，结果写进 `local/out/`（不带参数时读 `local/pages/` 的真实网页快照，快照用 `scripts/snapshot.sh` 抓）。合成样本在 `tests/fixtures/html/`，写法见那里的 `README.md`；不是 UTF-8 的和二进制的样本用 `cargo run --example make_samples` 生成。
 
 规则见 `CLAUDE.md`（Codex 读 `AGENTS.md`，是同一份）。

@@ -79,7 +79,15 @@ fn every_sample_has_expectations() {
 
 #[test]
 fn legacy_encoded_samples_are_not_utf8() {
-    for name in ["gbk-undeclared", "gbk-meta", "gbk-header", "big5-meta"] {
+    for name in [
+        "gbk-undeclared",
+        "gbk-meta",
+        "gbk-header",
+        "big5-meta",
+        "big5-undeclared",
+        "sjis-undeclared",
+        "latin-undeclared",
+    ] {
         let bytes = fs::read(Path::new(DIR).join(format!("{name}.html"))).unwrap();
         assert!(std::str::from_utf8(&bytes).is_err(), "{name}");
     }

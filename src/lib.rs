@@ -36,8 +36,16 @@ pub fn extract(
     let base = Url::parse(url.trim())
         .ok()
         .filter(|u| matches!(u.scheme(), "http" | "https"));
-    let (text, encoding) =
-        decode::decode_with(bytes, content_type, matches!(kind, Kind::Html | Kind::Xml));
+    let tld = base
+        .as_ref()
+        .and_then(Url::domain)
+        .and_then(|d| d.trim_end_matches('.').rsplit('.').next());
+    let (text, encoding) = decode::decode_with(
+        bytes,
+        content_type,
+        matches!(kind, Kind::Html | Kind::Xml),
+        tld,
+    );
     let plain = |title: Option<String>, raw: Vec<blocks::Raw>, links: Vec<Link>| Article {
         kind,
         encoding,

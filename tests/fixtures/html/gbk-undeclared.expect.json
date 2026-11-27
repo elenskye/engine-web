@@ -1,8 +1,8 @@
 {
-  "about": "没声明编码的 GBK 中文页：不是合法的 UTF-8，退到 GB18030",
+  "about": "没声明编码的 GBK 中文页：不是合法的 UTF-8，chardetng 探测",
   "url": "http://lib.example.cn/news/2026/winter.html",
   "kind": "html",
-  "encoding": "gb18030",
+  "encoding": "GBK",
   "title": "示例县图书馆冬季开放时间调整",
   "needs_js": false,
   "article": {

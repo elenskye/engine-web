@@ -1,20 +1,22 @@
-//! 编码识别（照 Pith 的 `decode`）：BOM → 合法的 UTF-8 → 声明的编码（HTTP 头 → 网页 meta / XML 声明）→ 后备 GB18030。
+//! 编码识别：BOM → 合法的 UTF-8 → 声明的编码（HTTP 头 → 网页 meta / XML 声明）→ chardetng 探测。
+//! 选型见 `docs/decisions/0005-encoding-detection.md`。
 //!
-//! 合法的 UTF-8 排在声明前面：老站改成 UTF-8 后常留着 `charset=gb2312`，按声明解反而乱码；
+//! 合法的 UTF-8 排在声明前面（和 Pith 一样）：老站改成 UTF-8 后常留着 `charset=gb2312`，按声明解反而乱码；
 //! 而真正的 GBK、Big5 字节几乎不可能恰好是合法的 UTF-8。
 
-use encoding_rs::{Encoding, GB18030, UTF_8};
+use encoding_rs::{Encoding, UTF_8};
 
-/// 解码成文字，交回文字和用的编码名（encoding_rs 的名字，如 `UTF-8`、`GBK`、`Big5`、`gb18030`）。
+/// 解码成文字，交回文字和用的编码名（encoding_rs 的名字，如 `UTF-8`、`GBK`、`Big5`、`Shift_JIS`）。
 pub fn decode(bytes: &[u8], content_type: Option<&str>) -> (String, &'static str) {
-    decode_with(bytes, content_type, true)
+    decode_with(bytes, content_type, true, None)
 }
 
-/// `scan_page`：在开头 4 KB 里找网页自己声明的编码（HTML、XML 才找）。
+/// `scan_page`：在开头 4 KB 里找网页自己声明的编码（HTML、XML 才找）。`tld`：网址的顶级域名，给探测当提示。
 pub(crate) fn decode_with(
     bytes: &[u8],
     content_type: Option<&str>,
     scan_page: bool,
+    tld: Option<&str>,
 ) -> (String, &'static str) {
     if let Some((enc, bom)) = Encoding::for_bom(bytes) {
         return (
@@ -39,11 +41,24 @@ pub(crate) fn decode_with(
         Some(enc) => enc,
         // 没声明：只有结尾断了半个字，也还是 UTF-8
         None if truncated_utf8(bytes) => UTF_8,
-        None => GB18030,
+        None => detect(bytes, tld),
     };
     (
         enc.decode_without_bom_handling(bytes).0.into_owned(),
         enc.name(),
+    )
+}
+
+/// 没声明编码又不是 UTF-8：chardetng（Firefox 用的那个）按字节统计猜，顶级域名当提示。
+fn detect(bytes: &[u8], tld: Option<&str>) -> &'static Encoding {
+    let mut detector = chardetng::EncodingDetector::new(chardetng::Iso2022JpDetection::Deny);
+    detector.feed(bytes, true);
+    let tld = tld
+        .map(str::to_ascii_lowercase)
+        .filter(|t| !t.is_empty() && t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-'));
+    detector.guess(
+        tld.as_deref().map(str::as_bytes),
+        chardetng::Utf8Detection::Deny,
     )
 }
 
@@ -100,7 +115,7 @@ mod tests {
     #[test]
     fn order_is_bom_utf8_declared_fallback() {
         let (gbk, _, _) = encoding_rs::GBK.encode("示例市统计局");
-        assert_eq!(decode(&gbk, None), ("示例市统计局".to_string(), "gb18030"));
+        assert_eq!(decode(&gbk, None), ("示例市统计局".to_string(), "GBK"));
         assert_eq!(
             decode(&gbk, Some("text/html; charset=GBK")),
             ("示例市统计局".to_string(), "GBK")
@@ -142,10 +157,46 @@ mod tests {
         let mut tricky = b"<!-- charset notes --><meta charset=gbk>".to_vec();
         tricky.extend_from_slice(&encoding_rs::GBK.encode("中文").0);
         assert_eq!(decode(&tricky, None).1, "GBK");
-        // 只在 HTML、XML 里找
-        assert_eq!(decode_with(&tricky, None, false).1, "gb18030");
+        // 只在 HTML、XML 里找：别的类型里写着 charset 的字不算声明
+        let mut json = br#"{"note": "charset=big5", "text": ""#.to_vec();
+        json.extend_from_slice(&encoding_rs::GBK.encode("示例市统计局发布的数据").0);
+        assert_eq!(decode(&json, None).1, "Big5");
+        assert_eq!(decode_with(&json, None, false, None).1, "GBK");
         // 声明成 UTF-16 的按 UTF-8
         assert_eq!(decode(b"<meta charset=utf-16>\xff", None).1, "UTF-8");
+    }
+
+    #[test]
+    fn undeclared_legacy_encodings_are_detected() {
+        let cases: [(&'static Encoding, &str, Option<&str>); 4] = [
+            (
+                encoding_rs::BIG5,
+                "本館秋季特展即日起至明年一月底展出，集結四十位藝術家的作品。",
+                Some("tw"),
+            ),
+            (
+                encoding_rs::SHIFT_JIS,
+                "十二月一日から、図書館の開館時間は午前九時から午後五時半までとなります。",
+                None,
+            ),
+            (
+                encoding_rs::WINDOWS_1252,
+                "À partir du 1er décembre, la bibliothèque sera ouverte du mardi au dimanche.",
+                Some("fr"),
+            ),
+            (
+                encoding_rs::GBK,
+                "明天上午九点开会，请准时参加。",
+                Some("com"),
+            ),
+        ];
+        for (enc, text, tld) in cases {
+            let (bytes, _, _) = enc.encode(text);
+            assert_eq!(
+                decode_with(&bytes, None, true, tld),
+                (text.to_string(), enc.name())
+            );
+        }
     }
 
     #[test]

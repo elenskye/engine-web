@@ -8,6 +8,7 @@ license = "UNLICENSED"
 publish = false
 
 [dependencies]
+chardetng = "^1.0.0"
 # 跟 Peck 同一版（和 Tauri 共用 html5ever 0.39），见 THIRD_PARTY.md
 dom_smoothie = "^0.18.2"
 dom_query = { version = "^0.28.0", features = ["markdown"] }
