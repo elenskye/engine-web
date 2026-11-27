@@ -1,0 +1,26 @@
+---
+title: Your First Component
+sidebar: learn
+---
+
+<Intro>
+
+Fernkit apps are made out of components. A component is a piece of the interface with its own logic and appearance.
+
+</Intro>
+
+## Defining a component
+
+Components are plain functions that return markup:
+
+```js
+export default function Profile() {
+  return <div><h1>Welcome to my app</h1></div>;
+}
+```
+
+<Pitfall>
+
+Component names must start with a capital letter.
+
+</Pitfall>

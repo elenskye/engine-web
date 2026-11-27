@@ -10,13 +10,21 @@ pub enum Error {
     /// 本机或内网地址（App 没放开时）。
     PrivateAddress,
     /// 跳到了别的网站，没跟过去。`to` 是新网址。
-    RedirectElsewhere { to: String },
+    RedirectElsewhere {
+        to: String,
+    },
     /// 跳转超过上限（默认 5 次）。
+    /// 从 https 跳到了不加密的 http（同一个网站也不跟）。`to` 是新网址。
+    InsecureRedirect {
+        to: String,
+    },
     TooManyRedirects,
     /// 找不到这个网站（域名解析不了）。
     UnknownHost,
     /// 404、500 这类。
-    HttpStatus { status: u16 },
+    HttpStatus {
+        status: u16,
+    },
     /// 不是网页：PDF、图片、Office 文件、压缩包、音视频。
     NotWeb(Binary),
     /// 抽不出正文（工具层在正文为空时交，`extract` 本身不交）。
@@ -52,6 +60,7 @@ impl Error {
             Self::BadUrl => "bad_url",
             Self::PrivateAddress => "private_address",
             Self::RedirectElsewhere { .. } => "redirect_elsewhere",
+            Self::InsecureRedirect { .. } => "redirect_elsewhere",
             Self::TooManyRedirects => "too_many_redirects",
             Self::UnknownHost => "unknown_host",
             Self::HttpStatus { .. } => "http_status",
@@ -79,6 +88,12 @@ impl fmt::Display for Error {
             Self::PrivateAddress => f.write_str("本机和内网地址不读。"),
             Self::RedirectElsewhere { to } => {
                 write!(f, "这个网址跳到了别的网站（{to}），没跟过去。")
+            }
+            Self::InsecureRedirect { to } => {
+                write!(
+                    f,
+                    "这个网址从 https 跳到了不加密的 http（{to}），没跟过去。"
+                )
             }
             Self::TooManyRedirects => f.write_str("这个网址跳转太多次，停下了。"),
             Self::UnknownHost => f.write_str("找不到这个网站（域名解析不了）。"),
@@ -202,6 +217,10 @@ mod tests {
             (Error::PrivateAddress, "private_address"),
             (
                 Error::RedirectElsewhere { to: String::new() },
+                "redirect_elsewhere",
+            ),
+            (
+                Error::InsecureRedirect { to: String::new() },
                 "redirect_elsewhere",
             ),
             (Error::TooManyRedirects, "too_many_redirects"),

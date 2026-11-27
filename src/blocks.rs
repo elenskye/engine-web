@@ -189,6 +189,30 @@ pub(crate) fn from_markdown(md: &str) -> Vec<Raw> {
     out
 }
 
+/// 开头的 YAML 头（`---` … `---` 或 `...`）：交回里面的 `title` 和头后面的正文。没有头就原样交回。
+pub(crate) fn front_matter(md: &str) -> (Option<String>, &str) {
+    let first = md.lines().next().unwrap_or("");
+    if first.trim_end() != "---" {
+        return (None, md);
+    }
+    let mut at = first.len() + 1;
+    let mut title = None;
+    for line in md.get(at..).unwrap_or("").split_inclusive('\n') {
+        at += line.len();
+        let t = line.trim_end();
+        if t == "---" || t == "..." {
+            return (title, md.get(at..).unwrap_or(""));
+        }
+        if let Some(v) = t.strip_prefix("title:") {
+            let v = v.trim().trim_matches(['"', '\'']).trim();
+            if !v.is_empty() {
+                title = Some(v.to_string());
+            }
+        }
+    }
+    (None, md)
+}
+
 /// 纯文本 → 段（按空行）。
 pub(crate) fn from_text(text: &str) -> Vec<Raw> {
     let mut out = Vec::new();
@@ -529,6 +553,16 @@ mod tests {
             "It`s 1. *not* bold"
         );
         assert_eq!(strip_inline("``a `tick` b``"), "a `tick` b");
+    }
+
+    #[test]
+    fn front_matter_gives_the_title_and_is_not_a_block() {
+        let md = "---\ntitle: 'Quick Start'\nsidebar: learn\n---\n\n<Intro>\n\nWelcome.\n";
+        let (title, body) = front_matter(md);
+        assert_eq!(title.as_deref(), Some("Quick Start"));
+        assert_eq!(body, "\n<Intro>\n\nWelcome.\n");
+        assert_eq!(front_matter("# 没有头\n"), (None, "# 没有头\n"));
+        assert_eq!(front_matter("---\n没有收尾"), (None, "---\n没有收尾"));
     }
 
     #[test]

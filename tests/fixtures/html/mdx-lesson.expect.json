@@ -1,0 +1,17 @@
+{
+  "about": "本机核对（react.dev）：请求头里有 Accept: text/markdown 时，文档站回 MDX 源文件，Content-Type 是 text/plain、网址没有扩展名；开头的 YAML 头说明是 Markdown（代码示例里有 <div> 也不是网页），标题取 title，YAML 头不算一段",
+  "url": "https://fernkit.example.dev/learn/your-first-component",
+  "content_type": "text/plain; charset=utf-8",
+  "kind": "markdown",
+  "encoding": "UTF-8",
+  "title": "Your First Component",
+  "article": {
+    "contains": ["Fernkit apps are made out of components.", "return <div><h1>Welcome to my app</h1></div>;"],
+    "excludes": [],
+    "blocks": [
+      {"contains": "Components are plain functions", "kind": "paragraph", "path": ["Defining a component"]},
+      {"contains": "export default function Profile()", "kind": "code", "path": ["Defining a component"]}
+    ]
+  },
+  "full": {"contains": ["title: Your First Component"], "excludes": []}
+}

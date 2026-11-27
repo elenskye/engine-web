@@ -76,13 +76,21 @@ fn redirects_to_other_sites_stop_with_the_new_url() {
             to: "https://b.example.org/elsewhere".into()
         }
     );
-    assert!(
-        matches!(
-            fetch("https://a.example.com/down", &opts(), &fake, &cancel),
-            Err(Error::RedirectElsewhere { .. })
-        ),
-        "https → http 不跟"
+    assert_eq!(
+        fetch("https://a.example.com/down", &opts(), &fake, &cancel).unwrap_err(),
+        Error::InsecureRedirect {
+            to: "http://a.example.com/plain".into()
+        },
+        "https → http 不跟（放开别的网站也不跟）"
     );
+    let follow = FetchOptions {
+        follow_other_sites: true,
+        ..opts()
+    };
+    assert!(matches!(
+        fetch("https://a.example.com/down", &follow, &fake, &cancel),
+        Err(Error::InsecureRedirect { .. })
+    ));
     assert_eq!(
         fetch("https://a.example.com/loop", &opts(), &fake, &cancel).unwrap_err(),
         Error::TooManyRedirects

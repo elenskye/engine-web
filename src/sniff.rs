@@ -55,7 +55,9 @@ pub fn sniff(bytes: &[u8], content_type: Option<&str>, url: &str) -> Result<Kind
         return Ok(Kind::Json);
     }
     // 说是 Markdown 的（扩展名或 Content-Type）：里面夹着 HTML 标签也还是 Markdown（GitHub 的 README 常以 `<div align="center">` 开头）
-    if ct.contains("markdown") || ext == "md" || ext == "markdown" {
+    // 开头是 YAML 头（`---` … `---`）：文档站的 Markdown / MDX 源文件（react.dev 看到 `Accept: text/markdown` 就回它，
+    // Content-Type 却是 text/plain），里面的代码示例有 `<div>` 也还是 Markdown
+    if ct.contains("markdown") || ext == "md" || ext == "markdown" || front_matter(start) {
         return Ok(Kind::Markdown);
     }
     let looks_html = [
@@ -232,6 +234,15 @@ fn lower_text(head: &[u8], utf16: bool) -> String {
     }
 }
 
+/// 开头是 YAML 头：第一行是 `---`，后面几行里有另一行 `---` 或 `...`。
+fn front_matter(start: &str) -> bool {
+    let mut lines = start.lines();
+    lines.next().is_some_and(|l| l.trim_end() == "---")
+        && lines
+            .take(40)
+            .any(|l| matches!(l.trim_end(), "---" | "..."))
+}
+
 /// 整份看起来像 JSON：首尾是成对的括号。
 fn looks_json(bytes: &[u8]) -> bool {
     let trimmed = bytes.trim_ascii();
@@ -313,6 +324,16 @@ mod tests {
             Ok(Kind::Markdown),
             "夹着 HTML 的 README 还是 Markdown"
         );
+        assert_eq!(
+            sniff(
+                b"---\ntitle: Quick Start\n---\n\n<Intro>\n\nWelcome.\n\n```js\nreturn <div><h1>Hi</h1></div>;\n```\n",
+                Some("text/plain; charset=utf-8"),
+                "https://docs.example.dev/learn"
+            ),
+            Ok(Kind::Markdown),
+            "带 YAML 头的 MDX 源文件"
+        );
+        assert_eq!(sniff(b"---\nnot front matter", None, ""), Ok(Kind::Text));
         assert_eq!(
             sniff(b"<!DOCTYPE html><html>", None, "page.md"),
             Ok(Kind::Html),

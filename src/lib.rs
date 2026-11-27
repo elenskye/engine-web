@@ -96,14 +96,16 @@ pub fn extract(
                 needs_js: p.needs_js,
             }
         }
-        // Markdown 原样交回；标题是第一个一级标题
+        // Markdown 原样交回；标题是 YAML 头里的 title，没有就是第一个一级标题；分段跳过 YAML 头
         Kind::Markdown => {
-            let raw = blocks::from_markdown(&text);
-            let title = raw
-                .iter()
-                .find(|r| r.kind == BlockKind::Heading && r.level == 1)
-                .map(|r| r.text.clone());
-            plain(title, raw, blocks::links_in_markdown(&text, base.as_ref()))
+            let (front_title, body) = blocks::front_matter(&text);
+            let raw = blocks::from_markdown(body);
+            let title = front_title.or_else(|| {
+                raw.iter()
+                    .find(|r| r.kind == BlockKind::Heading && r.level == 1)
+                    .map(|r| r.text.clone())
+            });
+            plain(title, raw, blocks::links_in_markdown(body, base.as_ref()))
         }
         Kind::Text | Kind::Json | Kind::Xml => plain(None, blocks::from_text(&text), Vec::new()),
     })

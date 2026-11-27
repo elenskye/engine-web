@@ -116,6 +116,12 @@ const DATA_NOTE: &str =
 fn tool_error(e: Error) -> ToolError {
     match &e {
         Error::NotWeb(what) => ToolError::new("not_web", e.to_string(), next_tool(*what), false),
+        Error::InsecureRedirect { .. } => ToolError::new(
+            "redirect_elsewhere",
+            e.to_string(),
+            "网站自己把 https 降成了 http：要读就用错误里的 http 网址再调一次（内容不加密，可能被改过）。",
+            false,
+        ),
         Error::RedirectElsewhere { .. } => ToolError::new(
             "redirect_elsewhere",
             e.to_string(),

@@ -162,6 +162,15 @@ pub fn fetch(
                 .ok_or(Error::HttpStatus {
                     status: resp.status,
                 })?;
+            if current.scheme() == "https"
+                && next.scheme() == "http"
+                && host_of(&current) == host_of(&next)
+            {
+                // 同一个网站降成 http 也不跟（Peck 的规矩），说明里讲清是降成了 http
+                return Err(Error::InsecureRedirect {
+                    to: next.to_string(),
+                });
+            }
             if !opts.follow_other_sites && !same_site(&current, &next) {
                 return Err(Error::RedirectElsewhere {
                     to: next.to_string(),
