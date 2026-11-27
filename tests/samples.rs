@@ -86,7 +86,6 @@ fn legacy_encoded_samples_are_not_utf8() {
 }
 
 #[test]
-#[ignore = "v0.2 Phase 2 实现取正文后打开"]
 fn samples_meet_their_expectations() {
     let mut failures = Vec::new();
     for s in samples() {

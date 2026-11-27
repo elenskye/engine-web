@@ -1,5 +1,5 @@
 {
-  "about": "英文博客：JSON-LD 作者和日期；代码块带语言；行内代码；列表；引用；没有 thead 的表格；../ 相对链接；导航、侧栏、页脚",
+  "about": "英文博客（full 模式照 Pith 去掉行首空白，代码的缩进只在分段里留着）：JSON-LD 作者和日期；代码块带语言；行内代码；列表；引用；没有 thead 的表格；../ 相对链接；导航、侧栏、页脚",
   "url": "https://blog.example.org/2026/retries/",
   "kind": "html",
   "encoding": "UTF-8",
@@ -30,8 +30,9 @@
     ]
   },
   "full": {
-    "contains": ["Home\nArchive", "a short outage turns into a long one", "    let ceiling = cap_ms.min(base_ms << attempt);", "503\tyes\tyes", "Popular posts", "All rights reserved"],
+    "contains": ["Home\nArchive", "a short outage turns into a long one", "\nlet ceiling = cap_ms.min(base_ms << attempt);\n", "503\tyes\tyes", "Popular posts", "All rights reserved"],
     "excludes": ["schema.org", "Sign up"],
-    "links": ["https://blog.example.org/2025/timeouts/", "https://blog.example.org/2025/queues/"]
+    "links": ["https://blog.example.org/2025/timeouts/", "https://blog.example.org/2025/queues/"],
+    "blocks": [{"contains": "    let ceiling = cap_ms.min(base_ms << attempt);", "kind": "code", "path": ["Rule 1: back off exponentially, with jitter"]}]
   }
 }

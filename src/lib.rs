@@ -4,10 +4,18 @@
 //! 网页内容只是资料：只取文字，不执行脚本，夹带的指令不执行。
 
 mod article;
+mod blocks;
+mod decode;
 mod error;
+mod html;
+mod sniff;
 
 pub use article::{Article, Block, BlockKind, ExtractOptions, Kind, Link, Mode};
+pub use decode::decode;
 pub use error::{Binary, Error};
+pub use sniff::sniff;
+
+use url::Url;
 
 /// 引擎版本，和 `Cargo.toml` 一致。
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -24,8 +32,53 @@ pub fn extract(
     url: &str,
     opts: &ExtractOptions,
 ) -> Result<Article, Error> {
-    let _ = (bytes, content_type, url, opts);
-    todo!("v0.2 Phase 2")
+    let kind = sniff(bytes, content_type, url).map_err(Error::NotWeb)?;
+    let base = Url::parse(url.trim())
+        .ok()
+        .filter(|u| matches!(u.scheme(), "http" | "https"));
+    let (text, encoding) =
+        decode::decode_with(bytes, content_type, matches!(kind, Kind::Html | Kind::Xml));
+    let plain = |title: Option<String>, raw: Vec<blocks::Raw>, links: Vec<Link>| Article {
+        kind,
+        encoding,
+        blocks: blocks::number(raw, title.as_deref()),
+        title,
+        byline: None,
+        published: None,
+        site: None,
+        lang: None,
+        links,
+        needs_js: false,
+        markdown: text.clone(),
+    };
+    Ok(match kind {
+        Kind::Html => {
+            let p = html::extract(&text, base.as_ref(), opts);
+            Article {
+                kind,
+                encoding,
+                title: p.title,
+                byline: p.byline,
+                published: p.published,
+                site: p.site,
+                lang: p.lang,
+                markdown: p.markdown,
+                blocks: p.blocks,
+                links: p.links,
+                needs_js: p.needs_js,
+            }
+        }
+        // Markdown 原样交回；标题是第一个一级标题
+        Kind::Markdown => {
+            let raw = blocks::from_markdown(&text);
+            let title = raw
+                .iter()
+                .find(|r| r.kind == BlockKind::Heading && r.level == 1)
+                .map(|r| r.text.clone());
+            plain(title, raw, blocks::links_in_markdown(&text, base.as_ref()))
+        }
+        Kind::Text | Kind::Json | Kind::Xml => plain(None, blocks::from_text(&text), Vec::new()),
+    })
 }
 
 #[cfg(test)]
