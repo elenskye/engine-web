@@ -1,0 +1,19 @@
+{
+  "about": "Phase 3（GitHub 目录页）：Readability 抽不出、退回整个 body 时，页眉地标（header、role=banner / navigation / contentinfo）、页内跳转链接、只剩图标的空列表项、读屏专用的重复文字（类名带哈希的也算）、空的小标题都不要",
+  "url": "https://code.example.com/example/kestrel/tree/main/docs",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "kestrel/docs at main · example/kestrel",
+  "needs_js": false,
+  "article": {
+    "contains": ["[config.md](https://code.example.com/example/kestrel/blob/main/docs/config.md)", "add install notes for Windows", "| Name | Last commit message | Last commit date |"],
+    "excludes": ["Skip to content", "Platform", "HostingRepository", "Pricing", "Pull requests", "© 2026 CodeHost", "NameName", "Last commit messageLast commit message", "Folders and files"],
+    "links": ["https://code.example.com/example/kestrel/blob/main/docs/faq.md"],
+    "max_chars": 900,
+    "blocks": [{"contains": "faq.md\tanswer the cache question\t3 months ago", "kind": "table_row", "path": []}]
+  },
+  "full": {
+    "contains": ["install.md\tadd install notes for Windows\tlast month", "Platform"],
+    "excludes": []
+  }
+}

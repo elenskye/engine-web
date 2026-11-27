@@ -1,6 +1,7 @@
 //! HTML → 正文。`article` 模式以 Peck 的 `html_to_markdown`、`tidy_markdown` 为底；`full` 模式是 Pith 的 `html_text`（换成 dom_query）。
 //!
-//! 和 Peck 的差别：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）先去掉再抽正文；
+//! 和 Peck 的差别：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）、读屏专用的重复文字、
+//! 页内跳转链接先去掉再抽正文；退回整个 `<body>` 时还去掉页眉、导航这类地标（`role`、正文外的 `<header>`）和空列表项；
 //! 补链接时只把真有协议的网址当绝对网址（Peck 把路径里带 `:` 的也当绝对网址）；不需要的转义还原（`12\.6` → `12.6`）；
 //! 标题多两条：`<title>` 是「唯一的 h1 + 分隔符 + 站名」时用 h1，都没有时用第一个 `h1`。
 
@@ -91,7 +92,7 @@ fn readability_config() -> dom_smoothie::Config {
 }
 
 fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
-    let cleaned = without_hidden(html);
+    let cleaned = prepare(html);
     let base_str = base.map(Url::as_str);
     let parsed =
         dom_smoothie::Readability::new(cleaned.as_str(), base_str, Some(readability_config()))
@@ -103,6 +104,9 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
         None => (String::new(), Vec::new()),
     };
     if text.trim().chars().count() < min_chars {
+        // 退回整个 <body>：另起一份，去掉站点的页眉、导航这类地标（标题还从原来那份取）
+        let doc = Document::from(cleaned.as_str());
+        strip_chrome(&doc);
         let body = doc.select("body");
         let (whole, whole_links) = match body.nodes().first() {
             Some(node) => (
@@ -272,22 +276,101 @@ fn name_of(node: &NodeRef) -> String {
         .unwrap_or_default()
 }
 
-/// 去掉隐藏的元素，交回整理后的 HTML。
-fn without_hidden(html: &str) -> String {
+/// 站点的页眉、导航、页脚、侧栏这类地标（`role`）。
+const CHROME_ROLES: &[&str] = &[
+    "banner",
+    "navigation",
+    "contentinfo",
+    "complementary",
+    "search",
+    "menubar",
+    "menu",
+    "toolbar",
+];
+
+/// `article` 模式抽正文前先去掉的：隐藏的元素（网页里夹带的指令常藏在这里）、读屏专用的重复文字、
+/// 「Skip to content」这种页内跳转链接、站点的页眉导航页脚这类地标（`role`）。交回整理后的 HTML。
+fn prepare(html: &str) -> String {
     let doc = Document::from(html);
-    let hidden_nodes: Vec<NodeRef> = doc
+    let drop: Vec<NodeRef> = doc
         .root()
         .descendants()
         .into_iter()
-        .filter(|n| n.is_element() && hidden(n))
+        .filter(|n| {
+            n.is_element() && (hidden(n) || screen_reader_only(n) || skip_link(n) || chrome_role(n))
+        })
         .collect();
-    if hidden_nodes.is_empty() {
+    if drop.is_empty() {
         return html.to_string();
     }
-    for node in hidden_nodes {
+    for node in drop {
         node.remove_from_parent();
     }
     doc.html().to_string()
+}
+
+fn chrome_role(node: &NodeRef) -> bool {
+    node.attr("role")
+        .is_some_and(|r| CHROME_ROLES.contains(&r.trim().to_ascii_lowercase().as_str()))
+}
+
+/// 读屏专用的元素：看得见的地方通常另有一份，留着会重复。类名常带哈希（`visuallyHidden__TIbnmb`），
+/// 所以看去掉 `-`、`_` 后的小写：含 `visuallyhidden`、`screenreader`，或以 `sronly` 开头。
+fn screen_reader_only(node: &NodeRef) -> bool {
+    node.class().is_some_and(|c| {
+        c.split_whitespace().any(|token| {
+            let t = token.replace(['-', '_'], "").to_ascii_lowercase();
+            t.contains("visuallyhidden") || t.contains("screenreader") || t.starts_with("sronly")
+        })
+    })
+}
+
+/// `<a href="#main">Skip to content</a>`、「跳到正文」。
+fn skip_link(node: &NodeRef) -> bool {
+    if name_of(node) != "a"
+        || !node
+            .attr("href")
+            .is_some_and(|h| h.trim_start().starts_with('#'))
+    {
+        return false;
+    }
+    let text = node.text().trim().to_lowercase();
+    [
+        "skip to",
+        "skip navigation",
+        "skip nav",
+        "jump to content",
+        "跳到",
+        "跳转到",
+        "跳过导航",
+    ]
+    .iter()
+    .any(|p| text.starts_with(p))
+}
+
+/// 去掉站点的页眉、导航这类地标：`role` 是 banner、navigation 等的元素，和不在 `<article>`、`<main>` 里的 `<header>`。
+fn strip_chrome(doc: &Document) {
+    let drop: Vec<NodeRef> = doc
+        .root()
+        .descendants()
+        .into_iter()
+        .filter(|n| n.is_element())
+        .filter(|n| {
+            let role = n
+                .attr("role")
+                .map(|r| r.trim().to_ascii_lowercase())
+                .unwrap_or_default();
+            CHROME_ROLES.contains(&role.as_str())
+                || (name_of(n) == "header"
+                    && !n
+                        .ancestors(None)
+                        .iter()
+                        .any(|a| matches!(name_of(a).as_str(), "article" | "main")))
+        })
+        .collect();
+    for node in drop {
+        node.remove_from_parent();
+    }
 }
 
 /// 链接改成绝对网址；图片只留说明（`data:` 的整个去掉）；连着的空行收成一个（Peck 的 `tidy_markdown`）。
@@ -311,6 +394,11 @@ fn tidy_markdown(md: &str, base: Option<&Url>) -> String {
         format!("]({}{})", absolute(&c[1], base), &c[2])
     });
     let text = unescape(&text);
+    // 内容去掉以后只剩记号的空列表项
+    static EMPTY_ITEM: OnceLock<Regex> = OnceLock::new();
+    let empty_item = EMPTY_ITEM
+        .get_or_init(|| Regex::new(r"(?m)^[ \t]*(?:[-*+]|\d{1,9}[.)]|#{1,6})[ \t]*$").unwrap());
+    let text = empty_item.replace_all(&text, "");
     blank.replace_all(text.trim(), "\n\n").to_string()
 }
 
@@ -776,9 +864,42 @@ mod tests {
     }
 
     #[test]
+    fn page_chrome_is_stripped_for_the_body_fallback() {
+        let doc = Document::from(
+            r#"<body><header>站点页眉</header><div role="navigation">导航</div><div role="Banner">横幅</div><main><header>文章头</header><p>正文</p></main><article><header>也留</header></article></body>"#,
+        );
+        strip_chrome(&doc);
+        let html = doc.html();
+        assert!(
+            !html.contains("站点页眉") && !html.contains("导航") && !html.contains("横幅"),
+            "{html}"
+        );
+        assert!(html.contains("文章头") && html.contains("正文") && html.contains("也留"));
+        let cleaned = prepare(
+            r##"<body><a href="#main">Skip to content</a><a href="#top">回到顶部</a><a href="/skip">Skip to the end</a><span class="x sr-only">读屏</span><h2 class="visuallyHidden__TIbnmb">也是读屏</h2><b class="prc-src-InternalVisuallyHidden-2YaI6">还是读屏</b><p>可见</p></body>"##,
+        );
+        assert!(
+            !cleaned.contains("Skip to content") && !cleaned.contains("读屏"),
+            "{cleaned}"
+        );
+        assert!(
+            cleaned.contains("回到顶部")
+                && cleaned.contains("Skip to the end")
+                && cleaned.contains("可见")
+        );
+        assert_eq!(
+            tidy_markdown("-\n\n    -\n- 有字\n1.\n2. 也有\n\n##\n\n## 标题", None),
+            "- 有字\n\n2. 也有\n\n## 标题"
+        );
+        // 类名带哈希的读屏元素也认；类名里只是碰巧有 only 的不算
+        assert!(!prepare(r#"<p class="srOnly">读屏</p>"#).contains("读屏"));
+        assert!(prepare(r#"<p class="classroom-only">留</p>"#).contains("留"));
+    }
+
+    #[test]
     fn hidden_elements_are_removed_before_extraction() {
         let html = r#"<html><body><p>看得见</p><p hidden>藏起来</p><div aria-hidden="TRUE">也藏</div><span style="Display: None">还藏</span></body></html>"#;
-        let cleaned = without_hidden(html);
+        let cleaned = prepare(html);
         assert!(
             cleaned.contains("看得见") && !cleaned.contains("藏"),
             "{cleaned}"
