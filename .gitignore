@@ -1,0 +1,4 @@
+/target/
+/local/
+/samples/out/
+.DS_Store

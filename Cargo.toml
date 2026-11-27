@@ -1,0 +1,10 @@
+[package]
+name = "engine-web"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Peck、Pith、Pomelo 共用的网页引擎：搜索、抓取、取正文"
+license = "UNLICENSED"
+publish = false
+
+[dependencies]
