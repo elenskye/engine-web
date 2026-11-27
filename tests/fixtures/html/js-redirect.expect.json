@@ -1,0 +1,10 @@
+{
+  "about": "Phase 3（知网海外站首页）：只有一段脚本跳转的页面，正文为空、提示「可能要开 JavaScript」；声明了 gb2312 但全是 ASCII，按 UTF-8",
+  "url": "https://lib.example.cn/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Loading",
+  "needs_js": true,
+  "article": {"contains": [], "excludes": ["window.location"], "max_chars": 0},
+  "full": {"contains": [], "excludes": ["window.location"], "max_chars": 0}
+}

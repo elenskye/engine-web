@@ -76,6 +76,8 @@ const BODY_SKIP: &[&str] = &[
 /// 正文比这短、脚本有这么多，就提示可能要开 JavaScript（Peck 的 `needs_js`）。
 const JS_TEXT_CHARS: usize = 500;
 const JS_SCRIPTS: usize = 5;
+/// 正文不到这么多字（不算空白）而有脚本，也提示可能要开 JavaScript。
+const JS_EMPTY_CHARS: usize = 20;
 
 pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> Parts {
     match opts.mode {
@@ -103,7 +105,7 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
         Some(a) => (a.text_content.to_string(), links_in_html(&a.content, base)),
         None => (String::new(), Vec::new()),
     };
-    if text.trim().chars().count() < min_chars {
+    if text.trim().chars().count() < min_chars || looks_like_footer(&text) {
         // 退回整个 <body>：另起一份，去掉站点的页眉、导航这类地标（标题还从原来那份取）
         let doc = Document::from(cleaned.as_str());
         strip_chrome(&doc);
@@ -134,7 +136,7 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
         },
         None => metadata(html, base_str),
     };
-    let title = title_of(&meta.title, &doc);
+    let title = title_of(&meta.title, meta.site.as_deref(), &doc);
     let blocks = blocks::number(blocks::from_markdown(&markdown), title.as_deref());
     let needs_js = needs_js(&markdown, html);
     Parts {
@@ -161,7 +163,7 @@ fn full(html: &str, base: Option<&Url>) -> Parts {
     walker.walk(&root, false, BlockKind::Paragraph);
     walker.flush();
     let meta = metadata(html, base.map(Url::as_str));
-    let title = title_of(&meta.title, &doc);
+    let title = title_of(&meta.title, meta.site.as_deref(), &doc);
     let blocks = blocks::number(walker.out, title.as_deref());
     let links = links_in(&root, base, SKIP);
     let needs_js = needs_js(&markdown, html);
@@ -209,19 +211,28 @@ fn metadata(html: &str, base: Option<&str>) -> Meta {
     }
 }
 
-/// 标题：Readability 的 → `<title>` → 第一个 `h1`。前两个是「唯一的 h1 + 分隔符 + 站名」时用 h1。
-fn title_of(readability: &str, doc: &Document) -> Option<String> {
+/// 标题：Readability 的 → `<title>` → 第一个 `h1`。再修两种情况：
+/// - Readability 取的是 `<title>` 里站名那一段（最后一段，或等于 `og:site_name`）：改用第一段
+///   （mdBook 的 `<title>What is Ownership? - The Rust Programming Language</title>`，书名在菜单栏的 h1 里）；
+/// - 标题是「唯一的 h1 + 分隔符 + 别的」：h1 在正文里（或页面没有 main / article）就用 h1（`配置文件 · Lumen 文档`）；
+///   h1 在正文外（菜单栏里的书名）就用别的那段。
+fn title_of(readability: &str, site: Option<&str>, doc: &Document) -> Option<String> {
     let collapse = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    let same = |a: &str, b: &str| collapse(a).to_lowercase() == collapse(b).to_lowercase();
+    let raw_title = collapse(&doc.select("title").text());
     let h1s = doc.select("h1");
     let h1 = collapse(&h1s.first().text());
-    let title = [
-        readability.to_string(),
-        doc.select("title").text().to_string(),
-        h1.clone(),
-    ]
-    .iter()
-    .map(|t| collapse(t))
-    .find(|t| !t.is_empty())?;
+    let mut title = [readability.to_string(), raw_title.clone(), h1.clone()]
+        .iter()
+        .map(|t| collapse(t))
+        .find(|t| !t.is_empty())?;
+    let parts = title_parts(&raw_title);
+    if parts.len() >= 2
+        && (same(&title, parts.last().unwrap()) || site.is_some_and(|s| same(&title, s)))
+        && !same(&parts[0], &title)
+    {
+        title = parts[0].clone();
+    }
     if h1s.length() == 1 && !h1.is_empty() && title != h1 {
         const SEPARATORS: &[char] = &[
             '·', '|', '-', '–', '—', '_', ':', '：', '»', '/', '\\', '•', '｜',
@@ -235,20 +246,57 @@ fn title_of(readability: &str, doc: &Document) -> Option<String> {
                     .strip_suffix(h1.as_str())
                     .map(str::trim_end)
                     .and_then(|r| r.strip_suffix(SEPARATORS))
-            });
-        if rest.is_some_and(|r| !r.trim().is_empty()) {
-            return Some(h1);
+            })
+            .map(str::trim)
+            .filter(|r| !r.is_empty());
+        if let Some(rest) = rest {
+            // h1 在正文里（或页面没有正文容器）：它是文章标题；在正文外（菜单栏里的书名、站名）：取剩下那段
+            let content = doc.select("main, article, [role=main]");
+            let in_content = content.length() == 0
+                || h1s.nodes()[0].ancestors(None).iter().any(|a| {
+                    matches!(name_of(a).as_str(), "main" | "article")
+                        || a.attr("role")
+                            .is_some_and(|r| r.eq_ignore_ascii_case("main"))
+                });
+            return Some(if in_content { h1 } else { rest.to_string() });
         }
     }
     Some(title)
+}
+
+/// `<title>` 按常见的分隔符切开（`页名 - 站名`、`页名 | 站名`、`页名_栏目_站名`）。
+fn title_parts(title: &str) -> Vec<String> {
+    static SEP: OnceLock<Regex> = OnceLock::new();
+    let sep = SEP.get_or_init(|| Regex::new(r"\s+[-|–—·»/]\s+|\s+::\s+|\s*[｜_]\s*").unwrap());
+    sep.split(title)
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 fn some(s: Option<String>) -> Option<String> {
     s.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
 }
 
+/// 可能要开 JavaScript：正文不到 500 字而 `<script>` 有 5 个以上（Peck 的规则）；
+/// 或者正文几乎是空的（不到 20 字）而有脚本（只有一两个 `type="module"` 的单页应用、脚本跳转页）。
 fn needs_js(text: &str, html: &str) -> bool {
-    text.trim().chars().count() < JS_TEXT_CHARS && html.matches("<script").count() >= JS_SCRIPTS
+    let chars = text.chars().filter(|c| !c.is_whitespace()).count();
+    let scripts = html.matches("<script").count();
+    (text.trim().chars().count() < JS_TEXT_CHARS && scripts >= JS_SCRIPTS)
+        || (chars < JS_EMPTY_CHARS && scripts >= 1)
+}
+
+/// Readability 抽出来的像页脚：不到 1000 字，带版权或备案的字样（`© 2026`、版权所有、ICP 备案……）。
+/// 当作没抽到，再看整个 `<body>`。只写「© 新华社」这种图片来源的不算。
+fn looks_like_footer(text: &str) -> bool {
+    static MARK: OnceLock<Regex> = OnceLock::new();
+    let mark = MARK.get_or_init(|| {
+        Regex::new(r"(?i)©\s*(?:\d{4}|\*)|copyright|all rights reserved|版权所有|ICP\s*备|公网安备")
+            .unwrap()
+    });
+    text.chars().count() < 1000 && mark.is_match(text)
 }
 
 /// 隐藏的元素（Pith 的 `hidden`）：网页里夹带的指令常藏在这里。
@@ -297,7 +345,12 @@ fn prepare(html: &str) -> String {
         .descendants()
         .into_iter()
         .filter(|n| {
-            n.is_element() && (hidden(n) || screen_reader_only(n) || skip_link(n) || chrome_role(n))
+            n.is_element()
+                && (hidden(n)
+                    || screen_reader_only(n)
+                    || skip_link(n)
+                    || chrome_role(n)
+                    || empty_inline(n))
         })
         .collect();
     if drop.is_empty() {
@@ -307,6 +360,16 @@ fn prepare(html: &str) -> String {
         node.remove_from_parent();
     }
     doc.html().to_string()
+}
+
+/// 空的格式元素（图标字体的 `<i class="icon"></i>` 这类）：转 Markdown 会剩下一对没内容的 `*`。
+fn empty_inline(node: &NodeRef) -> bool {
+    const INLINE: &[&str] = &[
+        "i", "em", "b", "strong", "s", "del", "strike", "u", "mark", "code",
+    ];
+    INLINE.contains(&name_of(node).as_str())
+        && node.text().trim().is_empty()
+        && !node.html().contains("<img")
 }
 
 fn chrome_role(node: &NodeRef) -> bool {
@@ -390,10 +453,25 @@ fn tidy_markdown(md: &str, base: Option<&Url>) -> String {
             format!("（图：{alt}）")
         }
     });
+    // `javascript:` 的链接只留文字
+    static SCRIPT_LINK: OnceLock<Regex> = OnceLock::new();
+    let script_link = SCRIPT_LINK.get_or_init(|| {
+        Regex::new(r"(?i)\[([^\]]*)\]\(javascript:(?:[^()]|\([^()]*\))*\)").unwrap()
+    });
+    let text = script_link.replace_all(&text, "$1");
     let text = link.replace_all(&text, |c: &regex::Captures| {
         format!("]({}{})", absolute(&c[1], base), &c[2])
     });
     let text = unescape(&text);
+    // 小标题的锚点：`## [标题](#标题)` 只留文字，`[¶](#…)`、`[#](#…)` 这类永久链接去掉（MDN、mdBook、Sphinx）
+    static PERMALINK: OnceLock<Regex> = OnceLock::new();
+    static SELF_LINK: OnceLock<Regex> = OnceLock::new();
+    let permalink = PERMALINK
+        .get_or_init(|| Regex::new(r#"\[(?:¶|\\?#|§|🔗)\]\(#[^)\s]*(?:\s+"[^"]*")?\)"#).unwrap());
+    let self_link = SELF_LINK
+        .get_or_init(|| Regex::new(r"(?m)^(#{1,6}[ \t]+)\[([^\]]+)\]\(#[^)\s]*\)[ \t]*$").unwrap());
+    let text = permalink.replace_all(&text, "");
+    let text = self_link.replace_all(&text, "$1$2");
     // 内容去掉以后只剩记号的空列表项
     static EMPTY_ITEM: OnceLock<Regex> = OnceLock::new();
     let empty_item = EMPTY_ITEM
@@ -403,7 +481,8 @@ fn tidy_markdown(md: &str, base: Option<&Url>) -> String {
 }
 
 /// dom_query 把 `.`、`(`、`#` 这些都转义了；在那个位置不需要转义的还原，读着顺、和原文对得上。
-/// 留着的：会改变 Markdown 含义的（`\*`、`\_`、`` \` ``、`\[`、`\]`、`\<`、`\\`、行首的 `1\.`、`\#`、`\+`、`\>`、表格里的 `\|`、`\![`）。
+/// 留着的：会改变 Markdown 含义的（`\*`、`\_`、`` \` ``、`\[`、`\]`、`\<`、`\\`、行首的 `1\.`、`\#`、`\+`、`\>`、表格里的 `\|`、`\![`），
+/// 和链接括号里的（标题里的 `\"`）。
 fn unescape(md: &str) -> String {
     let mut out = String::with_capacity(md.len());
     let mut in_fence = false;
@@ -421,10 +500,17 @@ fn unescape(md: &str) -> String {
         }
         let table = t.starts_with('|');
         let chars: Vec<char> = line.chars().collect();
+        // 链接的网址和标题 `](网址 "标题")` 里不动：标题里的 `\"` 要留着
+        let mut in_link = false;
         let mut j = 0;
         while j < chars.len() {
             let c = chars[j];
-            let Some(&next) = chars.get(j + 1).filter(|_| c == '\\') else {
+            let Some(&next) = chars.get(j + 1).filter(|_| c == '\\' && !in_link) else {
+                if c == ']' && chars.get(j + 1) == Some(&'(') {
+                    in_link = true;
+                } else if c == ')' && in_link && chars.get(j.wrapping_sub(1)) != Some(&'\\') {
+                    in_link = false;
+                }
                 out.push(c);
                 j += 1;
                 continue;
@@ -444,7 +530,7 @@ fn unescape(md: &str) -> String {
             let keep = match next {
                 '.' => list_number,
                 '!' => chars.get(j + 2) == Some(&'['),
-                '(' | ')' | '{' | '}' => false,
+                '(' | ')' | '{' | '}' | '"' => false,
                 '#' | '+' | '>' => at_start,
                 '|' => table,
                 _ => true,
@@ -814,6 +900,14 @@ mod tests {
     #[test]
     fn needless_escapes_are_undone() {
         assert_eq!(
+            unescape(r#"他说 \"好\"，见[链接](https://x.example/a "My \"Search\"") 和 \"引号\""#),
+            r#"他说 "好"，见[链接](https://x.example/a "My \"Search\"") 和 "引号""#
+        );
+        assert_eq!(
+            unescape(r"[a](https://x.example/b\)c) 之后 \(括号\)"),
+            r"[a](https://x.example/b\)c) 之后 (括号)"
+        );
+        assert_eq!(
             unescape(r"全长 12\.6 公里\(约\)，见 \{x\}\! 和 C\# a\>b"),
             "全长 12.6 公里(约)，见 {x}! 和 C# a>b"
         );
@@ -836,7 +930,7 @@ mod tests {
 
     #[test]
     fn title_drops_the_site_name_when_it_wraps_the_only_h1() {
-        let t = |title: &str, body: &str| title_of(title, &Document::from(body));
+        let t = |title: &str, body: &str| title_of(title, None, &Document::from(body));
         assert_eq!(
             t("配置文件 · Lumen 文档", "<h1>配置文件</h1>"),
             Some("配置文件".into())
@@ -861,6 +955,25 @@ mod tests {
         );
         assert_eq!(t("", "<h1>只有 h1</h1>"), Some("只有 h1".into()));
         assert_eq!(t("", "<p>都没有</p>"), None);
+        // Readability 取了站名那段（mdBook：书名在菜单栏的 h1 里，章节标题是 h2）
+        let book = r#"<title>What is Ownership? - The Rust Programming Language</title><h1 class="menu-title">The Rust Programming Language</h1><main><h2>What Is Ownership?</h2></main>"#;
+        assert_eq!(
+            t("The Rust Programming Language", book),
+            Some("What is Ownership?".into())
+        );
+        assert_eq!(
+            title_of(
+                "示例日报",
+                Some("示例日报"),
+                &Document::from("<title>地铁通车_城市_示例日报</title>")
+            ),
+            Some("地铁通车".into())
+        );
+        assert_eq!(
+            t("Home | Survey", "<title>Home | Survey</title>"),
+            Some("Home | Survey".into()),
+            "整个标题不动"
+        );
     }
 
     #[test]

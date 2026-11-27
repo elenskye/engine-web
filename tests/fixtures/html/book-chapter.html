@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Borrowing Rules - The Kestrel Book</title></head>
+<body>
+<nav id="sidebar" class="sidebar"><ol class="chapter"><li><a href="intro.html">Introduction</a></li><li><a href="borrowing.html" class="active">Borrowing Rules</a></li></ol></nav>
+<div id="page-wrapper" class="page-wrapper">
+  <div id="menu-bar" class="menu-bar">
+    <div class="left-buttons"><button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents"><i class="fa fa-bars"></i></button></div>
+    <h1 class="menu-title">The Kestrel Book</h1>
+    <div class="right-buttons"><a href="print.html" title="Print this book"><i id="print-button" class="fa fa-print"></i></a></div>
+  </div>
+  <div id="content" class="content">
+    <main>
+      <h2 id="borrowing-rules"><a class="header" href="#borrowing-rules">Borrowing Rules</a></h2>
+      <p>Kestrel lets a task read a package's files while another task reads them too, but only one task may write to a package at a time. The scheduler enforces this with a simple borrow table that is checked before every task starts.</p>
+      <p>When two tasks want to write the same package, the second one waits. Reads never wait for other reads, so test suites that only read can run in parallel without any extra configuration.</p>
+      <h3 id="why"><a class="header" href="#why">Why not locks?</a></h3>
+      <p>Locks held by crashed tasks are hard to clean up. A borrow table lives in the scheduler's memory and disappears with it, so a crash never leaves a stale entry behind.</p>
+      <h3 id="sharing">Sharing reads<a class="headerlink" href="#sharing" title="Link to this heading">¶</a></h3>
+      <p>Any number of tasks may hold a read borrow at once. The borrow table only records the count, so adding readers costs nothing.</p>
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -94,6 +94,7 @@ fn peck_text_json_binary_by_type() {
 }
 
 /// Peck 的 `needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
+/// 引擎多一条（Phase 3，ESS 数据门户、知网跳转页）：正文几乎是空的，有一个脚本也提示；Peck 这时是 false。
 #[test]
 fn peck_needs_js_when_text_is_short_and_scripts_are_many() {
     let shell = format!(
@@ -105,7 +106,18 @@ fn peck_needs_js_when_text_is_short_and_scripts_are_many() {
         "<html><body><div id=\"root\"></div>{}</body></html>",
         "<script>boot()</script>".repeat(4)
     );
-    assert!(!article(&four, "https://app.example.com/").needs_js);
+    assert!(
+        article(&four, "https://app.example.com/").needs_js,
+        "正文是空的：引擎提示（Peck 不提示）"
+    );
+    let four_with_text = format!(
+        "<html><body><p>页面加载中，请稍候。这里有一些说明文字。</p>{}</body></html>",
+        "<script>boot()</script>".repeat(4)
+    );
+    assert!(
+        !article(&four_with_text, "https://app.example.com/").needs_js,
+        "有字、脚本不到 5 个：照 Peck 不提示"
+    );
     let long = PECK_ARTICLE.replace(
         "</body>",
         &format!("{}</body>", "<script>x()</script>".repeat(6)),

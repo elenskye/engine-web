@@ -1,0 +1,10 @@
+{
+  "about": "Phase 3（ESS 数据门户）：Vite 单页应用，只有两个脚本、根元素是空的，正文为空也要提示「可能要开 JavaScript」（Peck 的规则要 5 个脚本）",
+  "url": "https://data.example.org/en/",
+  "kind": "html",
+  "encoding": "UTF-8",
+  "title": "Survey Data Portal",
+  "needs_js": true,
+  "article": {"contains": [], "excludes": [], "max_chars": 0},
+  "full": {"contains": [], "excludes": [], "max_chars": 0}
+}
