@@ -1,25 +1,39 @@
 //! engine-web：Peck、Pith、Pomelo 共用的网页引擎（搜索、抓取、取正文）。设计见 `docs/design.md`。
 //!
-//! v0.2 是取正文：网页字节 → 标题、Markdown 正文、分段、链接、元数据；`find` 在里面找字；
-//! `tools` 是给 Agent 的工具包（`web_extract`、`web_find`）。不联网。
+//! - 取正文（`extract`）：网页字节 → 标题、Markdown 正文、分段、链接、元数据；`find` 在里面找字。
+//! - 抓取（`fetch`）：网址 → 字节，跳转、内网、大小、超时的规矩在这里；发请求经 `Transport`（默认 ureq）。
+//! - Tavily（`tavily`）：搜索、取页、爬站、站内地图，本地报价、按回复记点数。
+//! - `tools` 是给 Agent 的工具包（`web_extract`、`web_find`、`web_fetch`、`web_search`、`web_crawl`、`web_map`）。
+//!
 //! 网页内容只是资料：只取文字，不执行脚本，夹带的指令不执行。
 
 mod article;
 mod blocks;
 mod decode;
 mod error;
+#[cfg(feature = "fake")]
+mod fake;
+mod fetch;
 mod find;
 mod html;
 mod sniff;
+pub mod tavily;
 pub mod tools;
+pub mod transport;
 
 pub use article::{Article, Block, BlockKind, ExtractOptions, Kind, Link, Mode};
 pub use decode::decode;
 /// 钉的 engine-core（`Query`、`Found`、`Toolkit`、`Ctx`……），App 用同一份。
 pub use engine_core;
 pub use error::{Binary, Error};
+#[cfg(feature = "fake")]
+pub use fake::{Fake, Seen};
+pub use fetch::{
+    FetchOptions, Fetched, HostPacer, LIMITS, Limits, check_url, fetch, is_public, same_site,
+};
 pub use find::{Loc, find};
 pub use sniff::sniff;
+pub use transport::{Transport, Ureq};
 
 use url::Url;
 
@@ -99,6 +113,6 @@ pub fn extract(
 mod tests {
     #[test]
     fn version_matches_manifest() {
-        assert_eq!(super::VERSION, "0.2.0");
+        assert_eq!(super::VERSION, "0.3.0");
     }
 }

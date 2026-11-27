@@ -1,4 +1,4 @@
-//! 工具包：清单自检、每个例子、命令行（`run_with` 比对 JSON）。
+//! 工具包：清单自检、本机文件的两个工具、命令行（`run_with` 比对 JSON）。联网工具的例子在 `tests/tools_net.rs`（模拟服务）。
 
 use engine_web::engine_core::{
     Cancel,
@@ -9,14 +9,21 @@ use engine_web::tools;
 use serde_json::{Value, json};
 
 #[test]
-fn manifest_passes_the_self_check_and_every_example_runs() {
+fn manifest_passes_the_self_check() {
     let manifest = tools::manifest();
     let names: Vec<&str> = manifest.iter().map(|t| t.name.as_str()).collect();
-    assert_eq!(names, ["web_extract", "web_find"]);
+    assert_eq!(
+        names,
+        [
+            "web_extract",
+            "web_find",
+            "web_fetch",
+            "web_search",
+            "web_crawl",
+            "web_map"
+        ]
+    );
     check_all(&manifest, &names).unwrap();
-    let host = LocalHost { yes: true };
-    let cancel = Cancel::new();
-    tools::toolkit().check_examples(&host.ctx(&cancel)).unwrap();
 }
 
 #[test]
@@ -166,11 +173,17 @@ fn cli(args: &[&str]) -> (u8, Value, Value) {
 fn cli_lists_describes_and_calls() {
     let (code, list, _) = cli(&["tools"]);
     assert_eq!(code, 0);
+    let tavily =
+        json!({"kind": "metered", "service": "tavily", "unit": "credit", "usd_per_unit": 0.008});
     assert_eq!(
         list,
         json!([
             {"name": "web_extract", "title": "取网页正文", "cost": {"kind": "local", "typical_ms": 50}, "confirm": {"kind": "never"}},
-            {"name": "web_find", "title": "在网页里找字", "cost": {"kind": "local", "typical_ms": 50}, "confirm": {"kind": "never"}}
+            {"name": "web_find", "title": "在网页里找字", "cost": {"kind": "local", "typical_ms": 50}, "confirm": {"kind": "never"}},
+            {"name": "web_fetch", "title": "读一个网页", "cost": tavily, "confirm": {"kind": "never"}},
+            {"name": "web_search", "title": "搜网页", "cost": tavily, "confirm": {"kind": "never"}},
+            {"name": "web_crawl", "title": "爬一个网站", "cost": tavily, "confirm": {"kind": "always"}},
+            {"name": "web_map", "title": "列出网站里的网址", "cost": tavily, "confirm": {"kind": "always"}}
         ])
     );
     let (code, spec, _) = cli(&["describe", "web_find"]);
@@ -245,7 +258,11 @@ fn apps_can_override_and_export() {
     use engine_web::engine_core::overrides::{Overrides, to_anthropic, to_openai};
     let overrides: Overrides = serde_json::from_value(json!({
         "web_extract": {"description": "Read a saved web page.", "defaults": {"max_chars": 8000}, "limits": {"max_chars": {"maximum": 10000}}},
-        "web_find": {"disabled": true}
+        "web_find": {"disabled": true},
+        "web_fetch": {"disabled": true},
+        "web_search": {"disabled": true},
+        "web_crawl": {"disabled": true},
+        "web_map": {"disabled": true}
     }))
     .unwrap();
     let toolkit = tools::toolkit().with_overrides(&overrides).unwrap();
@@ -271,5 +288,6 @@ fn apps_can_override_and_export() {
         )
         .unwrap_err();
     assert_eq!(too_many.kind, "bad_args", "上限收紧后生效");
+    // 只剩本机文件的 web_extract：例子不联网
     toolkit.check_examples(&host.ctx(&cancel)).unwrap();
 }

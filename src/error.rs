@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-/// 引擎的错误。v0.2 的取正文只会交 [`Error::NotWeb`]；其余种类给 v0.3 的抓取和 Tavily 用，先定下来。
+/// 引擎的错误。取正文只会交 [`Error::NotWeb`]；别的是抓取（`fetch`）和 Tavily 的。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     /// 不是 http(s)、带用户名密码、没有主机。
@@ -11,6 +11,10 @@ pub enum Error {
     PrivateAddress,
     /// 跳到了别的网站，没跟过去。`to` 是新网址。
     RedirectElsewhere { to: String },
+    /// 跳转超过上限（默认 5 次）。
+    TooManyRedirects,
+    /// 找不到这个网站（域名解析不了）。
+    UnknownHost,
     /// 404、500 这类。
     HttpStatus { status: u16 },
     /// 不是网页：PDF、图片、Office 文件、压缩包、音视频。
@@ -25,11 +29,15 @@ pub enum Error {
     Network,
     /// 超时。
     Timeout,
-    /// Tavily 的 401、403。
+    /// Tavily 的 401、403，或 App 没给 Tavily 密钥。
     Auth,
+    /// Tavily 的 400、422：参数不合它的规矩。
+    BadRequest,
+    /// Tavily 爬站、地图的 403：这个网站它不支持。
+    UnsupportedSite,
     /// Tavily 的 432、433（额度或套餐上限）。
     Quota,
-    /// Tavily 的 429。
+    /// Tavily 的 429、434。
     RateLimited,
     /// Tavily 的 5xx。
     Service,
@@ -44,6 +52,8 @@ impl Error {
             Self::BadUrl => "bad_url",
             Self::PrivateAddress => "private_address",
             Self::RedirectElsewhere { .. } => "redirect_elsewhere",
+            Self::TooManyRedirects => "too_many_redirects",
+            Self::UnknownHost => "unknown_host",
             Self::HttpStatus { .. } => "http_status",
             Self::NotWeb(_) => "not_web",
             Self::NoArticle => "no_article",
@@ -52,6 +62,8 @@ impl Error {
             Self::Network => "network",
             Self::Timeout => "timeout",
             Self::Auth => "auth",
+            Self::BadRequest => "bad_args",
+            Self::UnsupportedSite => "unsupported_site",
             Self::Quota => "quota",
             Self::RateLimited => "rate_limited",
             Self::Service => "service",
@@ -68,6 +80,8 @@ impl fmt::Display for Error {
             Self::RedirectElsewhere { to } => {
                 write!(f, "这个网址跳到了别的网站（{to}），没跟过去。")
             }
+            Self::TooManyRedirects => f.write_str("这个网址跳转太多次，停下了。"),
+            Self::UnknownHost => f.write_str("找不到这个网站（域名解析不了）。"),
             Self::HttpStatus { status } => write!(f, "网站回了 HTTP {status}。"),
             Self::NotWeb(what) => {
                 let label = what.label();
@@ -83,7 +97,9 @@ impl fmt::Display for Error {
             Self::TooLarge => f.write_str("网页太大，只收了前面一部分。"),
             Self::Network => f.write_str("连不上这个网站。"),
             Self::Timeout => f.write_str("读网页超时了。"),
-            Self::Auth => f.write_str("搜索服务的密钥不对或没有权限。"),
+            Self::Auth => f.write_str("搜索服务的密钥不对、没给或没有权限。"),
+            Self::BadRequest => f.write_str("搜索服务不接受这些参数。"),
+            Self::UnsupportedSite => f.write_str("搜索服务不支持这个网站。"),
             Self::Quota => f.write_str("搜索服务的额度用完了。"),
             Self::RateLimited => f.write_str("搜索服务限流了，等一会儿再试。"),
             Self::Service => f.write_str("搜索服务出错了。"),
@@ -188,6 +204,8 @@ mod tests {
                 Error::RedirectElsewhere { to: String::new() },
                 "redirect_elsewhere",
             ),
+            (Error::TooManyRedirects, "too_many_redirects"),
+            (Error::UnknownHost, "unknown_host"),
             (Error::HttpStatus { status: 500 }, "http_status"),
             (Error::NotWeb(Binary::Other), "not_web"),
             (Error::NoArticle, "no_article"),
@@ -196,6 +214,8 @@ mod tests {
             (Error::Network, "network"),
             (Error::Timeout, "timeout"),
             (Error::Auth, "auth"),
+            (Error::BadRequest, "bad_args"),
+            (Error::UnsupportedSite, "unsupported_site"),
             (Error::Quota, "quota"),
             (Error::RateLimited, "rate_limited"),
             (Error::Service, "service"),

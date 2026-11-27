@@ -1,6 +1,6 @@
 [package]
 name = "engine-web"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Peck、Pith、Pomelo 共用的网页引擎：搜索、抓取、取正文"
@@ -14,10 +14,23 @@ dom_smoothie = "^0.18.2"
 dom_query = { version = "^0.28.0", features = ["markdown"] }
 encoding_rs = "^0.8.44"
 engine-core = { git = "https://github.com/elenskye/engine-core", tag = "v0.2.0" }
+# ureq-proto 的 TRACE 会记录原始 HTTP 报文，包括 Tavily 的鉴权头：编译时就去掉（和 engine-pdf 一样）
+log = { version = "^0.4.35", features = ["max_level_debug", "release_max_level_debug"] }
 regex = "^1.13.2"
 serde = { version = "^1.0.229", features = ["derive"] }
 serde_json = "^1.0.154"
 url = "^2.5.9"
+
+# HTTP：Mac 上用系统 TLS（和 engine-pdf、Pith 一样），别的平台用 rustls（云端 Linux 不用装 OpenSSL）
+[target.'cfg(target_os = "macos")'.dependencies]
+ureq = { version = "^3.5.2", default-features = false, features = ["native-tls-no-default", "gzip", "brotli"] }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+ureq = { version = "^3.5.2", default-features = false, features = ["rustls", "gzip", "brotli"] }
+
+[features]
+# 模拟服务：测试和 App 的模拟模式用（FakeTransport）
+fake = []
 
 [[bin]]
 name = "engine-web"

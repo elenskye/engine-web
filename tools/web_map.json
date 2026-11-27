@@ -1,0 +1,77 @@
+{
+  "name": "web_map",
+  "title": "列出网站里的网址",
+  "description": "用 Tavily 从一个网址起列出同一个网站里的网址（不读正文），用来先看一个网站有哪些页、再挑几页用 web_fetch 读。花 Tavily 点数：每 10 个网址 1 点（写了 instructions 2 点），默认最多 50 个、约 5 点；每次先报价、要用户确认。max_depth 管从起点往下几层，instructions 用一句话说要哪些页。不出这个网站。",
+  "params": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "起点网址（完整的 http(s) 网址）"
+      },
+      "max_depth": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 3,
+        "description": "从起点往下找几层"
+      },
+      "limit": {
+        "type": "integer",
+        "default": 50,
+        "minimum": 1,
+        "maximum": 200,
+        "description": "最多几个网址（点数按它报价）"
+      },
+      "instructions": {
+        "type": "string",
+        "description": "用一句话说要哪些页（点数翻倍）"
+      },
+      "select_paths": {
+        "type": "array",
+        "maxItems": 10,
+        "items": {"type": "string"},
+        "description": "只要这些路径（正则），如 [\"/blog/.*\"]"
+      }
+    },
+    "required": ["url"]
+  },
+  "result": "「从某网址找到 N 个网址」，一行一个。data 另给网址列表。",
+  "result_schema": {
+    "type": "object",
+    "properties": {
+      "url": {"type": "string"},
+      "count": {"type": "integer", "minimum": 0},
+      "urls": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["url", "count", "urls"]
+  },
+  "errors": [
+    {
+      "kind": "bad_url",
+      "message": "这不是一个能读的 http(s) 网址。",
+      "hint": "给完整的 http(s) 网址；网址里不能带用户名和密码。",
+      "retry": false
+    },
+    {
+      "kind": "unsupported_site",
+      "message": "搜索服务不支持列这个网站的网址。",
+      "hint": "换用 web_fetch 读起点页，从里面的链接挑着读。",
+      "retry": false
+    }
+  ],
+  "cost": {"kind": "metered", "service": "tavily", "unit": "credit", "usd_per_unit": 0.008},
+  "confirm": {"kind": "always"},
+  "effects": {"network": true, "writes": "none"},
+  "note": "报价按 limit 算最坏情况：ceil(limit/10) × (instructions 2 : 1)；实际按 Tavily 回复里的点数记。",
+  "examples": [
+    {
+      "args": {"url": "https://docs.example.org/"},
+      "expect": {"contains": "找到 3 个网址", "data": {"count": 3}}
+    },
+    {
+      "args": {"url": "docs.example.org"},
+      "expect": {"error": "bad_url"}
+    }
+  ]
+}
