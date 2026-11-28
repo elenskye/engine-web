@@ -4,7 +4,7 @@
 
 > 准则更新（2026-11-28）：「五」加了「花钱的规矩」（一次超过 $0.5 或算不出、Tavily 24 小时合计超过 $5 才问，引擎算、引擎记共用账本，总仓库 `decisions/0011`）和「清理」（`./scripts/clean.sh`，开工、每轮、发版三档，`0013`）；「三」加了「引擎带的大文件」（`0012`，本引擎没有）。
 >
-> **2026-11-28 下午另做了一件**（所有引擎停着时，在总仓库的会话里，站主让做）：钉 engine-core v0.4.0（tag 没推，先指本机 `../engine-core`），Tavily 照花钱的规矩：`Web` 多了 `ledger`、`app`、`book()`，`Transport` 多了 `simulated()`（`Fake` 交 `true`），真花了钱记账；`web_crawl`、`web_map` 的确认从 `always` 改成 `never`（规矩之外不另问）；命令行不用问的直接执行。`check.sh` 开头把 `ENGINE_LEDGER_DIR` 指到临时目录；加了 `scripts/clean.sh` 和开工钩子。`./scripts/check.sh` 通过。接口变化记在 `CHANGELOG.md`「v0.4.0（开发中）」。
+> **2026-11-28 下午另做了一件**（所有引擎停着时，在总仓库的会话里，站主让做）：钉 engine-core v0.4.1（tag 没推，先指本机 `../engine-core`），Tavily 照花钱的规矩：`Web` 多了 `ledger`、`app`、`book()`，`Transport` 多了 `simulated()`（`Fake` 交 `true`），真花了钱记账；`web_crawl`、`web_map` 的确认从 `always` 改成 `never`（规矩之外不另问）；命令行不用问的直接执行。`check.sh` 开头把 `ENGINE_LEDGER_DIR` 指到临时目录；加了 `scripts/clean.sh` 和开工钩子。`./scripts/check.sh` 通过。接口变化记在 `CHANGELOG.md`「v0.4.0（开发中）」。
 
 ## 现在在哪
 
