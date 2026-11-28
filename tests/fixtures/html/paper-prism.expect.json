@@ -1,0 +1,21 @@
+{
+  "about": "没有 citation_* 而有 PRISM 刊名 + Dublin Core 的 DOI：也算文献页；作者照 dc.creator 一个一位，关键词用 dc.subject，页码只有起始页",
+  "url": "https://letters.example.org/el/2024/007",
+  "kind": "html",
+  "title": "A Note on Counting Errors",
+  "rule": null,
+  "paper": {
+    "title": "A Note on Counting Errors",
+    "authors": ["Ada Moss", "Wei Lin"],
+    "journal": "Example Letters",
+    "volume": "8",
+    "issue": "1",
+    "pages": "e7",
+    "published": "2024-02-01",
+    "doi": "10.5555/el.2024.007",
+    "keywords": ["Measurement", "Survey methods"],
+    "ids": {"issn": "0000-0002"}
+  },
+  "article": {"contains": ["bunch at round numbers"]},
+  "full": {"contains": ["bunch at round numbers"]}
+}

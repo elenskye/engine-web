@@ -111,8 +111,23 @@ pub(super) fn render(
         text += &line;
         text.push('\n');
     }
+    let paper_lines = article
+        .paper
+        .as_ref()
+        .map(|p| paper_lines(p, article.published.as_deref()))
+        .unwrap_or_default();
+    // 有文献信息时作者在那几行里列，这一行不重复
+    let byline = if article
+        .paper
+        .as_ref()
+        .is_some_and(|p| !p.authors.is_empty())
+    {
+        &None
+    } else {
+        &article.byline
+    };
     let meta: Vec<String> = [
-        ("作者", &article.byline),
+        ("作者", byline),
         ("日期", &article.published),
         ("站名", &article.site),
         ("语言", &article.lang),
@@ -122,6 +137,10 @@ pub(super) fn render(
     .collect();
     if !meta.is_empty() {
         text += &format!("{}\n", meta.join(" · "));
+    }
+    for line in &paper_lines {
+        text += line;
+        text.push('\n');
     }
     let how = if mode == Mode::Full {
         "全部文字"
@@ -205,6 +224,106 @@ pub(super) fn render(
         next,
         ..Output::default()
     })
+}
+
+/// 列几位作者（多的写「等 N 位」，全部在 `data.paper.authors`）。
+const SHOW_AUTHORS: usize = 10;
+/// 列几个机构。
+const SHOW_AFFILIATIONS: usize = 5;
+
+/// 文献信息给模型的几行（`decisions/0008`）：作者和机构、刊物、编号、PDF、关键词。摘要不重复（正文里有），
+/// 发表日期和上面「日期」一样时也不重复（`shown_date`）。
+fn paper_lines(p: &crate::Paper, shown_date: Option<&str>) -> Vec<String> {
+    let mut lines = vec!["文献：".to_string()];
+    if !p.authors.is_empty() {
+        let names: Vec<&str> = p
+            .authors
+            .iter()
+            .take(SHOW_AUTHORS)
+            .map(|a| a.name.as_str())
+            .collect();
+        let more = p.authors.len().saturating_sub(SHOW_AUTHORS);
+        let tail = if more > 0 {
+            format!(" 等 {} 位", p.authors.len())
+        } else {
+            String::new()
+        };
+        lines.push(format!("- 作者：{}{tail}", names.join("; ")));
+        let mut affiliations: Vec<&str> = Vec::new();
+        for a in p.authors.iter().flat_map(|a| &a.affiliations) {
+            if !affiliations.contains(&a.as_str()) {
+                affiliations.push(a);
+            }
+        }
+        if !affiliations.is_empty() {
+            let more = affiliations.len().saturating_sub(SHOW_AFFILIATIONS);
+            let tail = if more > 0 {
+                format!(" 等 {} 个", affiliations.len())
+            } else {
+                String::new()
+            };
+            let shown: Vec<&str> = affiliations.into_iter().take(SHOW_AFFILIATIONS).collect();
+            lines.push(format!("- 机构：{}{tail}", shown.join("; ")));
+        }
+    }
+    let mut source: Vec<String> = Vec::new();
+    if let Some(j) = &p.journal {
+        source.push(j.clone());
+    }
+    for (label, value) in [
+        ("卷", &p.volume),
+        ("期", &p.issue),
+        ("页", &p.pages),
+        ("编号", &p.number),
+    ] {
+        if let Some(v) = value {
+            source.push(format!("{label} {v}"));
+        }
+    }
+    if let Some(publisher) = p
+        .publisher
+        .as_ref()
+        .filter(|x| Some(*x) != p.journal.as_ref())
+    {
+        source.push(format!("出版 {publisher}"));
+    }
+    if let Some(d) = p.published.as_deref().filter(|d| Some(*d) != shown_date) {
+        source.push(format!("发表 {d}"));
+    }
+    if !source.is_empty() {
+        lines.push(format!("- 出处：{}", source.join("，")));
+    }
+    let mut ids: Vec<String> = p.doi.iter().map(|d| format!("DOI {d}")).collect();
+    ids.extend(
+        p.ids
+            .iter()
+            .map(|i| format!("{} {}", id_label(i.scheme), i.value)),
+    );
+    if !ids.is_empty() {
+        lines.push(format!("- 编号：{}", ids.join(" · ")));
+    }
+    if let Some(pdf) = &p.pdf_url {
+        lines.push(format!("- PDF：{pdf}"));
+    }
+    if !p.keywords.is_empty() {
+        lines.push(format!("- 关键词：{}", p.keywords.join("; ")));
+    }
+    if lines.len() == 1 {
+        return Vec::new();
+    }
+    lines
+}
+
+/// 编号种类给人看的写法。
+fn id_label(scheme: &str) -> &str {
+    match scheme {
+        "arxiv" => "arXiv",
+        "pmid" => "PMID",
+        "pmcid" => "PMCID",
+        "issn" => "ISSN",
+        "isbn" => "ISBN",
+        other => other,
+    }
 }
 
 /// 从第 `offset` 个字起最多取 `max_chars` 个字；没到结尾时尽量断在段落（空行）或行尾。交回这一段和它的结尾（第几个字，不含）。
@@ -299,6 +418,58 @@ pub(super) fn web_find(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{Author, Paper, PaperId};
+
+    #[test]
+    fn paper_lines_are_short() {
+        let author = |n: usize| Author {
+            name: format!("Author {n}"),
+            affiliations: vec![format!("Lab {}", n % 7)],
+            orcid: None,
+        };
+        let p = Paper {
+            title: Some("T".into()),
+            authors: (1..=12).map(author).collect(),
+            journal: Some("Journal of Examples".into()),
+            publisher: Some("Journal of Examples".into()),
+            volume: Some("12".into()),
+            issue: Some("3".into()),
+            pages: Some("45–67".into()),
+            published: Some("2024/05".into()),
+            doi: Some("10.5555/x".into()),
+            ids: vec![PaperId {
+                scheme: "arxiv",
+                value: "2401.00001".into(),
+            }],
+            pdf_url: Some("https://journal.example.org/x.pdf".into()),
+            keywords: vec!["a".into(), "b".into()],
+            ..Paper::default()
+        };
+        let lines = paper_lines(&p, None);
+        assert_eq!(lines[0], "文献：");
+        assert!(
+            lines[1].starts_with("- 作者：Author 1; Author 2;")
+                && lines[1].ends_with("Author 10 等 12 位")
+        );
+        assert!(lines[2].ends_with("等 7 个"), "{}", lines[2]);
+        assert_eq!(
+            lines[3], "- 出处：Journal of Examples，卷 12，期 3，页 45–67，发表 2024/05",
+            "出版者和刊名一样就不重复"
+        );
+        assert_eq!(lines[4], "- 编号：DOI 10.5555/x · arXiv 2401.00001");
+        assert_eq!(lines[5], "- PDF：https://journal.example.org/x.pdf");
+        assert_eq!(lines[6], "- 关键词：a; b");
+        assert!(paper_lines(&Paper::default(), None).is_empty());
+        let dated = Paper {
+            published: Some("2017/06/12".into()),
+            ..Paper::default()
+        };
+        assert!(
+            paper_lines(&dated, Some("2017/06/12")).is_empty(),
+            "日期和上面一样就不再列"
+        );
+        assert_eq!(paper_lines(&dated, None)[1], "- 出处：发表 2017/06/12");
+    }
 
     #[test]
     fn segments_break_at_paragraphs() {

@@ -1,0 +1,14 @@
+{
+  "about": "Nature 文章页的规则：正文照通用做法抽，只去掉夹在正文里的「Similar content being viewed by others」、分享框和读者评论；参考文献的 CAS、Google Scholar 链接去掉，Article（DOI）留着；关键词用 dc.subject",
+  "url": "https://www.nature.com/articles/s99999-099-00001-x",
+  "kind": "html",
+  "title": "Rounded answers inflate measured inequality",
+  "site": "Nature",
+  "rule": "nature",
+  "paper": {"journal": "Nature", "volume": "999", "issue": "9999", "pages": "101–108", "doi": "10.1038/s99999-099-00001-x", "keywords": ["Statistics"], "ids": {"issn": "0000-0004"}},
+  "article": {
+    "contains": ["rounding raises measured inequality by a few percent", "which makes inequality look larger than it is", "Heaping in survey data.", "[Article](https://doi.org/10.5555/esr.2020.3)"],
+    "excludes": ["Similar content being viewed by others", "Another article about surveys", "Get shareable link", "By submitting a comment", "Google Scholar", "CAS"]
+  },
+  "full": {"contains": ["Similar content being viewed by others", "Google Scholar", "which makes inequality look larger than it is"]}
+}

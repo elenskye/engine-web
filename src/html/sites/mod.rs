@@ -5,6 +5,12 @@
 //! - `article` 模式再按 `root` 选正文的根、去掉 `drop`、交 `shape` 整理；选不到根、根里没几个字，就退回通用做法。
 //!   没有 `root` 的规则只在整页里去掉 `drop`，正文照通用做法抽。
 
+mod aea;
+mod arxiv;
+mod nature;
+mod plos;
+
+use super::name_of;
 use dom_query::{Document, NodeRef, Selection};
 use url::Url;
 
@@ -23,7 +29,7 @@ pub(crate) struct Site {
     pub shape: Option<fn(&NodeRef)>,
 }
 
-const SITES: &[&Site] = &[];
+const SITES: &[&Site] = &[&arxiv::SITE, &plos::SITE, &aea::SITE, &nature::SITE];
 
 /// 规则选出的正文至少要这么多字（不算空白），不然退回通用做法（网站改版、选择器落空时）。
 const MIN_CHARS: usize = 20;
@@ -79,6 +85,58 @@ pub(crate) fn narrow(site: &Site, html: &str) -> Option<Narrowed> {
     }
     let chars = root.text().chars().filter(|c| !c.is_whitespace()).count();
     (chars >= MIN_CHARS).then(|| Narrowed::Root(root.html().to_string()))
+}
+
+// —— 各条规则共用的小工具 ——
+
+/// 一个元素里的文字，空白收成一个空格。
+pub(super) fn text_of(node: &NodeRef) -> String {
+    node.text().split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// 去掉 `node` 里的链接，只留文字（作者名链到搜索页这类）。
+pub(super) fn unlink(node: &NodeRef) {
+    node.strip_elements(&["a"]);
+}
+
+/// HTML 里的文字转义（规则自己拼 HTML 时用）。
+pub(super) fn escape(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+/// 两列的「标签 | 值」表格改成列表：`标签 值`；标签是空的一行接在上一项后面（arXiv 的「Cite as」占三行）。
+pub(super) fn label_table_to_list(table: &NodeRef) {
+    let mut items: Vec<String> = Vec::new();
+    for row in Selection::from(*table).select("tr").nodes() {
+        let cells: Vec<NodeRef> = row
+            .element_children()
+            .into_iter()
+            .filter(|c| matches!(name_of(c).as_str(), "td" | "th"))
+            .collect();
+        let [label, value] = cells.as_slice() else {
+            continue;
+        };
+        unlink_buttons(value);
+        let value = value.inner_html().to_string();
+        match text_of(label).as_str() {
+            "" => {
+                if let Some(last) = items.last_mut() {
+                    last.push(' ');
+                    last.push_str(&value);
+                }
+            }
+            label => items.push(format!("{} {value}", escape(label))),
+        }
+    }
+    let list: String = items.iter().map(|i| format!("<li>{i}</li>")).collect();
+    table.replace_with_html(format!("<ul>{list}</ul>"));
+}
+
+/// 去掉按钮（「更多说明」这类小按钮里的读屏文字）。
+fn unlink_buttons(node: &NodeRef) {
+    Selection::from(*node).select("button").remove();
 }
 
 #[cfg(test)]
@@ -150,5 +208,18 @@ mod tests {
         };
         assert!(page.contains("正文") && !page.contains("分享到"));
         assert!(narrow(&site, "<p>没有噪声</p>").is_none());
+    }
+
+    #[test]
+    fn label_tables_become_lists() {
+        let doc = Document::from(
+            r#"<table><tr><td>Comments:</td><td>15 pages</td></tr><tr><td>Cite as:</td><td><a href="/x">arXiv:1</a></td></tr><tr><td>&nbsp;</td><td>(or v7)<button><span>Focus</span></button></td></tr></table>"#,
+        );
+        label_table_to_list(&doc.select("table").nodes()[0]);
+        let html = doc.select("ul").html().to_string();
+        assert_eq!(
+            html,
+            r#"<ul><li>Comments: 15 pages</li><li>Cite as: <a href="/x">arXiv:1</a> (or v7)</li></ul>"#
+        );
     }
 }

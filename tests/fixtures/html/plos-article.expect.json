@@ -1,0 +1,14 @@
+{
+  "about": "PLOS 文章页的规则：正文从摘要起（#artText），题名作者、指标、图的轮播、读者评论不要；图下面的「Download」去掉；参考文献的序号后面有空格（空锚点去掉），Google Scholar 链接去掉、View Article 留着",
+  "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.9999999",
+  "kind": "html",
+  "title": "Lending Rules and Small Firms",
+  "rule": "plos",
+  "paper": {"journal": "PLOS ONE", "pages": "e9999999", "doi": "10.1371/journal.pone.9999999", "authors": ["Ada Moss"]},
+  "article": {
+    "contains": ["## Abstract\n\nSmall firms borrow less", "lending to small firms in the first region fell by about a tenth", "Lending to small firms by region.", "1. Lin W. Capital rules and credit.", "[View Article](https://doi.org/10.5555/ebr.2022.14)"],
+    "excludes": ["Loading metrics", "Reader Comments", "Download:", "TIFF original image", "Google Scholar", "Figures"],
+    "blocks": [{"contains": "fell by about a tenth", "kind": "paragraph", "path": ["Introduction"]}]
+  },
+  "full": {"contains": ["Loading metrics", "fell by about a tenth"]}
+}

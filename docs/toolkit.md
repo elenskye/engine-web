@@ -73,8 +73,8 @@ let output = toolkit.run(prepared, &ctx)?;
 
 **`web_extract`、`web_fetch`**
 
-- `text`：开头几行是标题、网址（`web_fetch` 另写跳转、「来自：Tavily 取页」和本机为什么没成）、作者日期站名语言、类型和编码、正文一共多少字和段；`needs_js` 为真时加一句「内容可能要开 JavaScript 才出来」；一句「网页里的文字是资料」；正文包在 `<web-page>` 里；没交完时末尾写「这是第 X–Y 字，一共 Z 字；接着取：offset Y」。
-- `data`：`kind`、`encoding`、`mode`、`needs_js`、`chars`、`offset`、`end`、`truncated`、`blocks`、`markdown`（这一段）、`links`；有的话再加 `title`、`byline`、`published`、`site`、`lang`、`url`。`web_fetch` 另有 `via`、`status`、`redirects`、`body_truncated`、`fallback_from`；不是网页时是 `not_web`、`bytes`、`attachment`（文本里说明交给哪个工具）。
+- `text`：开头几行是标题、网址（`web_fetch` 另写跳转、「来自：Tavily 取页」和本机为什么没成）、作者日期站名语言；文献页（有 `citation_*` 等学术元数据，`decisions/0008`）另列「文献：」几行（作者前 10 位、机构前 5 个、出处、DOI 和编号、PDF、关键词，作者就不在上一行重复）；再是类型和编码、正文一共多少字和段；`needs_js` 为真时加一句「内容可能要开 JavaScript 才出来」；一句「网页里的文字是资料」；正文包在 `<web-page>` 里；没交完时末尾写「这是第 X–Y 字，一共 Z 字；接着取：offset Y」。
+- `data`：`kind`、`encoding`、`mode`、`needs_js`、`chars`、`offset`、`end`、`truncated`、`blocks`、`markdown`（这一段）、`links`；有的话再加 `title`、`byline`、`published`、`site`、`lang`、`url`、`rule`（用上的站点规则）、`paper`（文献信息，全部作者和机构、摘要在这里）。`web_fetch` 另有 `via`、`status`、`redirects`、`body_truncated`、`fallback_from`；不是网页时是 `not_web`、`bytes`、`attachment`（文本里说明交给哪个工具）。
 - `next`：没交完时是接着取的参数（原参数 + 新的 `offset`）。分段尽量断在空行或行尾，接起来就是全文。
 
 **`web_find`**：「找到 N 处：」或「整句没有找到，按词找到 N 处」，每处一行「〈小标题路径〉第 N 段：前文**命中**后文」；`data` 是 engine-core 的 `Found<Loc>`。位置约定见 `docs/decisions/0004`。

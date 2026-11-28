@@ -137,6 +137,7 @@ pub mod tools { pub struct Web { pub fetch: FetchOptions, pub transport: Arc<dyn
 - **Pomelo 的「找不到正文」**：引擎不报错，交回空正文和 `needs_js`，由 App 决定怎么说；`web_extract` 工具在正文为空时交 `no_article`。
 - **表格、链接、代码块不丢**：`dom_query` 的 Markdown 转换在样本上逐项核对；丢了的补规则。
 - **元数据**：Readability 读 meta 和 JSON-LD 的那一套，两种模式一样。标题：Readability 的 → `<title>` → 第一个 `h1`；Readability 取的是 `<title>` 里站名那一段（最后一段，或等于 `og:site_name`）时改用第一段；标题是「唯一的 h1 + 分隔符 + 别的」时，h1 在正文里（或页面没有 `main`、`article`）就用 h1（`配置文件 · Lumen 文档`），h1 在正文外（mdBook 菜单栏里的书名）就用别的那段。作者（一个字也没有的编号不算）、发布日期、站名（`og:site_name` 等）、语言。
+- **站点规则和文献信息**（v0.4，`docs/decisions/0008`）：认得出的站（arXiv 摘要页、PLOS、AEA、Nature）先按规则选正文的根、去掉站点噪声，选不到就退回上面的做法；有 `citation_*` 或 PRISM 学术元数据的网页另交 `paper`（两种模式一样），`article` 模式顺带去掉参考文献后面的 Google Scholar、CAS 查找链接。代码在 `src/html/sites/`、`src/html/paper.rs`。
 - **分段（`blocks`）**：见 §6。
 - **Markdown、纯文本、JSON、XML**：原样交回（Peck 的做法）。Markdown 的标题是第一个一级标题，分段按 Markdown 切；别的按空行切。
 
@@ -172,7 +173,7 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 
 ## 8. 样本和真实网页
 
-- **合成样本**（能提交，`tests/fixtures/html/`）：中文、英文文章；带表格、代码块、相对链接、图片、导航和页脚噪声的；没声明编码的 GBK 页、声明了 Big5 的页；只有脚本外壳的页；正文很短的页；不是网页的字节（PDF 头、PNG、ZIP）。v0.4 再加各个站点规则的合成页。每个样本旁边放期望的标题、要包含的句子、不能包含的导航文字。
+- **合成样本**（能提交，`tests/fixtures/html/`）：中文、英文文章；带表格、代码块、相对链接、图片、导航和页脚噪声的；没声明编码的 GBK 页、声明了 Big5 的页；只有脚本外壳的页；正文很短的页；不是网页的字节（PDF 头、PNG、ZIP）。v0.4 起每条站点规则、文献信息各有合成页（结构照那个站，文字自己写）。每个样本旁边放期望的标题、要包含的句子、不能包含的导航文字。
 - **真实网页**（只在本机，`local/pages/`，不进 Git，版权）：站主给网址清单（`local/pages/urls.txt`，一行一个），本机 Claude 抓快照存原件和抓取日期。`cargo run --example pages` 对每页打印标题、字数、开头几行、`needs_js`、段数，结果写进 `local/out/`，人看有没有把导航当正文、有没有丢表格和链接。v0.4 每个站点规则配几页。
 - **模拟服务**：Tavily 和抓取都走 `Transport`，测试不连外网。
 
@@ -189,5 +190,4 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 
 ## 10. 还没定的（在对应 Phase 里定，写进决定）
 
-- 站点规则怎么写：倾向每站一个 Rust 模块、共用一套小工具（`ROADMAP.md` v0.4.0「做法」），v0.4 Phase 1 定稿，写进 `decisions/0008`。
 - `web_fetch` 交回 PDF 原件时，附件太大怎么交（看 engine-core 的附件约定）。

@@ -1,0 +1,25 @@
+{
+  "about": "arXiv 摘要页的规则：去掉「Title:」「Abstract:」标签和题名那行，作者去链接，「标签 | 值」表改成列表（续行接在上一项），DOI 旁的提示按钮去掉，全文链接留一行，提交记录一版一行、去掉 view email；右栏、arXivLabs、推荐人去掉。文献信息照 citation_*",
+  "url": "https://arxiv.org/abs/2601.99999",
+  "kind": "html",
+  "title": "Counting Round Numbers in Survey Answers",
+  "rule": "arxiv",
+  "paper": {
+    "title": "Counting Round Numbers in Survey Answers",
+    "authors": ["Moss, Ada", "Lin, Wei"],
+    "published": "2026/01/03",
+    "pdf_url": "https://arxiv.org/pdf/2601.99999",
+    "abstract": "We measure the bunching and propose a correction.",
+    "ids": {"arxiv": "2601.99999"}
+  },
+  "article": {
+    "exact": "Submitted on 3 Jan 2026 (v1), last revised 10 Feb 2026 (this version, v2)\n\nAuthors: Ada Moss, Wei Lin\n\n## Abstract\n\nSurvey answers bunch at round numbers. We measure the bunching in three household surveys and propose a correction that spreads each round answer over its neighbours.\n\n- Comments: 12 pages, 3 figures\n- Subjects: Methodology (stat.ME); Applications (stat.AP)\n- Cite as: [arXiv:2601.99999](https://arxiv.org/abs/2601.99999) \\[stat.ME\\] (or [arXiv:2601.99999v2](https://arxiv.org/abs/2601.99999v2) \\[stat.ME\\] for this version) [https://doi.org/10.48550/arXiv.2601.99999](https://doi.org/10.48550/arXiv.2601.99999)\n\nFull text: [View PDF](https://arxiv.org/pdf/2601.99999) · [HTML (experimental)](https://arxiv.org/html/2601.99999v2) · [TeX Source](https://arxiv.org/src/2601.99999)\n\n## Submission history\n\n- From: Ada Moss\n- \\[v1\\] Sat, 3 Jan 2026 10:00:00 UTC (512 KB)\n- \\[v2\\] Tue, 10 Feb 2026 09:30:00 UTC (530 KB)",
+    "blocks": [
+      {"contains": "Survey answers bunch at round numbers.", "kind": "paragraph", "path": ["Abstract"]},
+      {"contains": "Comments: 12 pages, 3 figures", "kind": "list_item", "path": ["Abstract"]}
+    ]
+  },
+  "full": {
+    "contains": ["Title:Counting Round Numbers in Survey Answers", "Bibliographic Tools"]
+  }
+}

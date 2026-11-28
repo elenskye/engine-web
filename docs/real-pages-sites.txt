@@ -1,0 +1,59 @@
+# v0.4 真实页的网址（只存网址；快照放 local/pages/sites/，不进 Git）。
+# 用法：mkdir -p local/pages/sites && cp docs/real-pages-sites.txt local/pages/sites/urls.txt && ./scripts/snapshot.sh local/pages/sites/urls.txt && cargo run --release --example pages -- local/pages/sites
+# 行的顺序就是快照的编号，只往后加，不删不挪（挡程序的也留着）。
+# 文献页：arXiv
+https://arxiv.org/abs/1706.03762
+https://arxiv.org/abs/2005.14165
+https://arxiv.org/abs/hep-th/9711200
+https://arxiv.org/abs/1512.03385v1
+# 文献页：PubMed、PMC
+https://pubmed.ncbi.nlm.nih.gov/34265844/
+https://pubmed.ncbi.nlm.nih.gov/32109013/
+https://pubmed.ncbi.nlm.nih.gov/32015507/
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/
+# 文献页：期刊
+https://www.nature.com/articles/s41586-021-03819-2
+https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0363891
+https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124
+https://elifesciences.org/articles/109043
+https://www.mdpi.com/2071-1050/18/23/12143
+https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559
+https://www.science.org/doi/10.1126/science.aaa8415
+https://www.sciencedirect.com/science/article/pii/S0140673620301835
+# 文献页：工作论文、智库
+https://www.nber.org/papers/w36037
+https://www.bis.org/publications/working-paper-1400-banking-across-borders-where-lend-differs-sector
+https://www.federalreserve.gov/econres/notes/feds-notes/the-surprising-stability-of-hedge-fund-repo-haircuts-20261125.html
+https://ideas.repec.org/p/nbr/nberwo/24001.html
+https://www.rand.org/pubs/research_reports.html
+https://www.brookings.edu/research-commentary/
+https://www.cfr.org/backgrounder/what-imf
+# Wiki
+https://en.wikipedia.org/wiki/International_Monetary_Fund
+https://en.wikipedia.org/wiki/Brookings_Institution
+https://de.wikipedia.org/wiki/Europ%C3%A4ische_Zentralbank
+https://ja.wikipedia.org/wiki/%E5%9B%BD%E9%9A%9B%E9%80%9A%E8%B2%A8%E5%9F%BA%E9%87%91
+https://en.wikibooks.org/wiki/Principles_of_Economics
+https://ec.europa.eu/eurostat/statistics-explained/index.php?title=GDP_per_capita,_consumption_per_capita_and_price_level_indices
+# 国际金融数据库
+https://fred.stlouisfed.org/series/GDP
+https://fred.stlouisfed.org/series/UNRATE
+https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
+https://www.bis.org/statistics/totcredit.htm
+https://www.worldbank.org/en/publication/global-economic-prospects
+https://data.ecb.europa.eu/data/datasets/EXR
+# 带图的长文章
+https://ourworldindata.org/how-much-development-aid-is-spent-on-climate-change
+https://www.quantamagazine.org/how-m-c-eschers-art-creates-bizarre-mathematical-worlds-20261118/
+https://theconversation.com/elon-musk-has-approval-to-launch-1-million-satellites-an-astronomer-explains-how-this-would-impact-the-sky-297646
+https://www.pewresearch.org/decoded/2026/11/24/can-ai-research-tools-help-code-data-about-restrictions-on-religion/
+https://arstechnica.com/cars/2026/11/volvos-big-batteries-we-drive-its-updated-2028-plug-in-hybrids/
+# 翻页的长文章
+https://www.phoronix.com/review/gmktec-evo-x2
+https://www.phoronix.com/review/gmktec-evo-x2/2
+https://www.anandtech.com/show/16252/mac-mini-apple-m1-tested
+https://www.anandtech.com/show/16252/mac-mini-apple-m1-tested/2
+# 补的期刊（引擎抓得到）
+https://www.aeaweb.org/articles?id=10.1257/jep.31.2.211
+https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00863/full
+# 挡程序、不作样本的（2026-11-28）：elifesciences（脚本验证）、mdpi、science.org、sciencedirect、peerj、royalsocietypublishing、phoronix、data.worldbank.org（403）、arstechnica（405）、link.springer.com（跳到 idp 设 cookie）、fred（HTTP/2 断开、超时）、eurostat（500）

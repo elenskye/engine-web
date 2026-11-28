@@ -10,6 +10,7 @@ mod clean;
 mod full;
 mod markdown;
 mod meta;
+mod paper;
 mod sites;
 
 use crate::blocks;
@@ -92,6 +93,13 @@ const JS_EMPTY_CHARS: usize = 20;
 pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> Parts {
     // 站点规则（decisions/0008）：两种模式都先做 `fix`，article 模式再选正文的根
     let site = sites::detect(base);
+    // 文献信息（两种模式一样）；article 模式顺带去掉参考文献后面的查找链接
+    let page = Document::from(html);
+    let paper = paper::read(&page, base);
+    let unlinked =
+        (opts.mode == Mode::Article && paper.is_some() && paper::drop_lookup_links(&page))
+            .then(|| page.html().to_string());
+    let html = unlinked.as_deref().unwrap_or(html);
     let fixed = site.and_then(|s| sites::fix(s, html));
     let html = fixed.as_deref().unwrap_or(html);
     let mut parts = match opts.mode {
@@ -99,6 +107,20 @@ pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> 
         Mode::Full => full::extract(html, base),
     };
     parts.rule = site.map(|s| s.key);
+    if let Some(p) = &paper {
+        // 文献页的标题照 citation_title（Frontiers 的 <title> 只写站名）；作者、日期通用的读不到才补
+        if p.title.is_some() {
+            parts.title.clone_from(&p.title);
+        }
+        if parts.byline.is_none() && !p.authors.is_empty() {
+            let names: Vec<&str> = p.authors.iter().map(|a| a.name.as_str()).collect();
+            parts.byline = Some(names.join("; "));
+        }
+        if parts.published.is_none() {
+            parts.published.clone_from(&p.published);
+        }
+    }
+    parts.paper = paper;
     parts
 }
 

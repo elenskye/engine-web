@@ -1,6 +1,6 @@
 # ROADMAP
 
-现在：**v0.3.0 已发**（tag `v0.3.0`，2026-11-27）：取正文、抓取、Tavily 搜索，六个工具。正在做 **v0.4.0 站点规则、文章里的图、多页合并**（Phase 1 完成，在做 Phase 2）。原 v0.4.0 接 Peck 和 v0.5.0 对调（2026-11-28 站主定：Peck 还在开发）。
+现在：**v0.3.0 已发**（tag `v0.3.0`，2026-11-27）：取正文、抓取、Tavily 搜索，六个工具。正在做 **v0.4.0 站点规则、文章里的图、多页合并**（Phase 1、2 完成，下一步 Phase 3）。原 v0.4.0 接 Peck 和 v0.5.0 对调（2026-11-28 站主定：Peck 还在开发）。
 
 分工见 `CLAUDE.md`「二」和 `docs/decisions/0001`：云端 Claude 做标「云端」的 Phase（在 `cloud/v<主>.<次>` 分支上），本机做标「本机」的；本机 Claude 审核、合并、commit、打 tag。
 
@@ -11,7 +11,7 @@
 | v0.1.0 | 计划、设计稿、骨架 | 本机 | 完成（没打 tag） |
 | v0.2.0 | **取正文**：字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别、类型判断、「可能要开 JavaScript」提示、`article` / `full` 两种模式；`web_extract`、`web_find`；工具包和命令行 | 云端为主 | **已发**（2026-11-27） |
 | v0.3.0 | **抓取和搜索**：`web_fetch`（跳转、超时、大小上限、内网检查、解压 gzip / br）；Tavily 的搜索、取页、爬站、站内地图（`web_search`、`web_crawl`、`web_map`）；报价和 `Usage`；模拟服务 | 本机（站主 2026-11-27 定） | **已发**（2026-11-27） |
-| v0.4.0 | **站点规则、图、多页**：文献页（arXiv、期刊、工作论文和智库）、维基百科、GitHub 的 README 和 issue、微信公众号文章；文章里的图；多页文章自动合并（原 v0.5） | 本机（站主 2026-11-28 定） | 在做：Phase 1 完成 |
+| v0.4.0 | **站点规则、图、多页**：文献页（arXiv、期刊、工作论文和智库）、维基百科、GitHub 的 README 和 issue、微信公众号文章；文章里的图；多页文章自动合并（原 v0.5） | 本机（站主 2026-11-28 定） | 在做：Phase 1–2 完成 |
 | v0.5.0 | 接 Peck：`harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily（原 v0.4） | 本机（Peck 仓库） | 大纲 |
 | v0.6.0 | 接 Pomelo：`youzi/files.rs::fetch_page`、`youzi/office.rs::web_article`、`youzi/skills/web.rs`、`pub2md/search.rs` | 本机（Pomelo 仓库） | 大纲 |
 | v0.7.0 | 接 Pith：`research/download.rs` 的抓取、`research/content.rs` 的网页取字、`research/tavily.rs` | 本机（Pith 仓库） | 大纲 |
@@ -46,7 +46,7 @@
 | Phase | 做什么 | 验收 | 状态 |
 | --- | --- | --- | --- |
 | 1 底子与决定 | 规则框架和认站；`Article` 的新字段；合成样本的 `.expect.json` 加 `rule`、`paper`、`images`、`next_page`；真实页快照放 `local/pages/sites/`（只抓国际上程序拿得到的）；`decisions/0008` | 框架在合成页上跑通；没有规则的样本结果一字不变 | 完成（2026-11-28） |
-| 2 文献页 | 通用的 `citation_*`、PRISM、Dublin Core 元数据 → `paper`；arXiv、PLOS、AEA、Nature 的规则；工具结果里的「文献」几行 | 每站合成页 + 几页真实页，元数据逐项对 | 在做 |
+| 2 文献页 | 通用的 `citation_*`、PRISM、Dublin Core 元数据 → `paper`；arXiv、PLOS、AEA、Nature 的规则；工具结果里的「文献」几行 | 每站合成页 + 几页真实页，元数据逐项对 | 完成（2026-11-28） |
 | 3 百科、代码站、公众号 | 维基百科、GitHub（README、issue）、微信公众号的规则 | 同上 | |
 | 4 图与多页 | `images`：懒加载的 `data-src`、`srcset` 取最大的、`figcaption`、去掉图标和 1×1 的统计图、记所在段；认下一页；`fetch_article`（抓 + 取正文 + 合并）；`web_fetch`、`web_find` 加 `max_pages`；工具结果末尾列「文中的图」（前 20 张，多的写还有几张） | 合成的多页文章和几篇真实的；模拟服务测跟页、停下、取消 | |
 | 5 真实核对与收尾 | `docs/real-pages.txt` 的旧网址全部重跑：没用上规则的页，正文和 v0.3.0 逐字一样；用上规则的逐页看；文档（design、toolkit、CHANGELOG、README、工具清单）；`./scripts/check.sh` 两种配置都过；打 tag | 发 v0.4.0 | |
@@ -89,5 +89,5 @@
 
 - [ ] v0.2.0：把几份常看的网页存下来（浏览器的「存储为…」，格式选网页源码，不要网页归档），在本仓库目录的终端里跑 `cargo run -q --bin engine-web -- call web_extract '{"file":"<路径>","url":"<网址>"}'`，看正文对不对、有没有把导航和广告当正文；再把 `web_extract` 换成 `web_find`、加 `"query":"<文章里的一句话>"`，看找到的段落对不对。本机已核对过的 63 页的结果在 `local/out/`（每页一个 `.article.md`），也可以直接翻。
 - [ ] v0.3.0：在本仓库目录跑 `cargo run -q --bin engine-web -- call web_fetch '{"url":"<常看的网页>"}'`，看正文对不对；再跑 `ENGINE_KEY_TAVILY="$(cat ~/Documents/Dataset/Pomelo/key/tavily)" cargo run -q --bin engine-web -- call web_search '{"query":"<一个问题>"}' --yes`，看结果和 `usage` 里的花费；爬站 `web_crawl` 不加 `--yes` 应当只报价。
-- [ ] v0.4.0：从浏览器存一页知网文献页，在本仓库目录跑 `cargo run -q --bin engine-web -- call web_extract '{"file":"<路径>","url":"<网址>"}'`，看题名、作者、机构、摘要、关键词对不对；再用 `web_fetch` 读一篇公众号文章、一个维基百科条目、一个 GitHub issue、一篇分页的新闻，看正文全不全、末尾「文中的图」的网址能不能打开、分页的是不是合成了一篇。
+- [ ] v0.4.0：在本仓库目录跑 `cargo run -q --bin engine-web -- call web_fetch '{"url":"https://arxiv.org/abs/1706.03762"}'`，看开头「文献：」几行（作者、出处、编号、PDF）和正文（摘要、Comments 那几项、提交记录）对不对；再换一篇你常看的期刊文章（Nature、PLOS、AEA 这类）看「文献」几行和正文开头有没有菜单、指标这类杂项。Phase 3、4 做完再加：一个维基百科条目、一个 GitHub issue、一篇公众号文章、一篇分页的文章，看正文全不全、「文中的图」的网址能不能打开、分页的是不是合成了一篇。
 - [ ] v0.5.0：Peck 正式版里让模型搜一次、读一页，引用的网址对；内网地址被拒。

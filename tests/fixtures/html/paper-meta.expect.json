@@ -1,0 +1,30 @@
+{
+  "about": "期刊文章页的 citation_* 元数据：三位作者和各自的机构、ORCID、卷期页、DOI 去掉前缀、PDF 补成绝对网址、关键词、摘要去掉标签；<title> 只写站名时标题用 citation_title；article 模式去掉参考文献后面的 Google Scholar 链接，full 模式全留",
+  "url": "https://journals.example.org/jee/articles/2025-0412",
+  "kind": "html",
+  "title": "Small Samples, Big Claims: Re-reading Field Experiments",
+  "rule": null,
+  "paper": {
+    "title": "Small Samples, Big Claims: Re-reading Field Experiments",
+    "authors": ["Moss, Ada", "Lin, Wei", "Okafor, Chidi"],
+    "affiliations": ["Department of Economics, Example University", "Example Institute for Policy Studies"],
+    "journal": "Journal of Example Economics",
+    "publisher": "Example Press",
+    "volume": "41",
+    "issue": "2",
+    "pages": "101–129",
+    "published": "2025/04/15",
+    "doi": "10.5555/jee.2025.0412",
+    "pdf_url": "https://journals.example.org/articles/jee-2025-0412.pdf",
+    "keywords": ["field experiments", "statistical power", "replication"],
+    "abstract": "most were too small to detect the effects they report.",
+    "ids": {"issn": "0000-0001"}
+  },
+  "article": {
+    "contains": ["statistical power to detect a five percent effect is below one in four", "Power in practice.", "[Article](https://doi.org/10.5555/jee.2021.0101)"],
+    "excludes": ["Google Scholar", "Sign in", "All rights reserved"]
+  },
+  "full": {
+    "contains": ["statistical power to detect a five percent effect is below one in four", "Google Scholar", "Sign in"]
+  }
+}

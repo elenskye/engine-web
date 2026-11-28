@@ -1,0 +1,10 @@
+{
+  "about": "只有 Dublin Core 的普通网页（政府、机构网页常这么标）不算文献页，DC.identifier 是网址不是 DOI",
+  "url": "https://council.example.gov/notices/heating",
+  "kind": "html",
+  "title": "Winter heating schedule",
+  "rule": null,
+  "paper": null,
+  "article": {"contains": ["five days earlier than usual"]},
+  "full": {"contains": ["five days earlier than usual"]}
+}
