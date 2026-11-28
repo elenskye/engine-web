@@ -13,9 +13,7 @@ chardetng = "^1.0.0"
 dom_smoothie = "^0.18.2"
 dom_query = { version = "^0.28.0", features = ["markdown"] }
 encoding_rs = "^0.8.44"
-# engine-core v0.4.1（花钱的规矩 spend）的 tag 推上 GitHub 之前先指本机（总仓库 docs/decisions/0009；还没推的 tag 用不了 [patch]）。
-# 推上去以后换回：engine-core = { git = "https://github.com/elenskye/engine-core", tag = "v0.4.1" }
-engine-core = { path = "../engine-core" }
+engine-core = { git = "https://github.com/elenskye/engine-core", tag = "v0.4.1" }
 # ureq-proto 的 TRACE 会记录原始 HTTP 报文，包括 Tavily 的鉴权头：编译时就去掉（和 engine-pdf 一样）
 log = { version = "^0.4.35", features = ["max_level_debug", "release_max_level_debug"] }
 regex = "^1.13.2"

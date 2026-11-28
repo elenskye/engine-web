@@ -6,7 +6,7 @@
 
 站点规则、图、多页见 `ROADMAP.md`「v0.4.0」，发版时补全。另有花钱的规矩（2026-11-28）：
 
-- 钉 engine-core `v0.4.1`（tag 推上去之前指本机 `../engine-core`）。
+- 钉 engine-core `v0.4.1`（git tag）。
 - `tools::Web` 多了 `ledger`（默认 `Ledger::Shared`）、`app` 和 `book()`；`toolkit_with` 用同一份账本定要不要问（engine-core `spend`：一次超过 $0.5、或 Tavily 最近 24 小时合计超过 $5）。真花了钱的 Tavily 调用记进 `<底>/engine-web/tavily-ledger.jsonl`。
 - `transport::Transport` 多了带默认的 `simulated()`；`Fake` 交 `true`，不记账。
 - `web_crawl`、`web_map` 的清单确认从 `always` 改成 `never`。命令行不用问的直接执行，记账名「命令行」。
