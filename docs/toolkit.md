@@ -133,6 +133,6 @@ Tavily 密钥从环境变量 `ENGINE_KEY_TAVILY` 取（engine-core 的 `LocalHos
 
 | App | 接哪些工具 | 要注意的 |
 | --- | --- | --- |
-| Peck（v0.4） | `web_fetch`、`web_search`、`web_find`；`web_extract` 给 WebKit 渲染后的 HTML | 原生搜索的路由、DeepSeek 搜索、一个任务内的缓存、WebKit 渲染、存输出目录留在 Peck；`needs_js` 为真或报 `no_article` 时照旧用 WebKit 渲染；Peck 给模型截 32 KB 的写法改用 `max_chars` |
+| Peck（v0.5） | `web_fetch`、`web_search`、`web_find`；`web_extract` 给 WebKit 渲染后的 HTML | 原生搜索的路由、DeepSeek 搜索、一个任务内的缓存、WebKit 渲染、存输出目录留在 Peck；`needs_js` 为真或报 `no_article` 时照旧用 WebKit 渲染；Peck 给模型截 32 KB 的写法改用 `max_chars` |
 | Pomelo（v0.6） | `web_fetch`（「添加网页」，`follow_other_sites` 放开）、`web_search` | 模拟模式换成 `Fake`；User-Agent 用 Pomelo 现在那个浏览器样式的 |
 | Pith（v0.7） | `web_fetch`（`mode: full`，核对摘录用）、`web_find`、`web_search` | 月上限照旧在 Pith 查（`prepare` 拿报价）；`HostPacer` 1.5 s；存快照、切块存库、Claude 网页抓取的后备留在 Pith；60 万字上限改用 `max_chars` / `offset` |

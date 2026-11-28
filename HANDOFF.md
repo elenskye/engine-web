@@ -1,60 +1,55 @@
 # HANDOFF
 
-更新：2026-11-27 · **v0.3.0 已发**（tag `v0.3.0`）· 本机 Claude Code
+更新：2026-11-28 · **v0.3.0 已发**（tag `v0.3.0`，已推上 GitHub）· **v0.4.0 计划写好，等站主看** · 本机 Claude Code
 
 ## 现在在哪
 
-v0.3.0 能用了：取正文（v0.2）、**抓取**（`fetch`：网址 → 字节）、**Tavily**（搜索、取页、爬站、站内地图，本地报价、按回复记点数），六个工具 `web_extract`、`web_find`、`web_fetch`、`web_search`、`web_crawl`、`web_map` 和命令行。接口见 `CHANGELOG.md`，接线见 `docs/toolkit.md`，选型 `docs/decisions/0006`、`0007`。还没有 App 接。
+v0.3.0 能用了：取正文、抓取（`fetch`）、Tavily（搜索、取页、爬站、站内地图），六个工具 `web_extract`、`web_find`、`web_fetch`、`web_search`、`web_crawl`、`web_map` 和命令行。接口见 `CHANGELOG.md`，接线见 `docs/toolkit.md`。还没有 App 接。
 
-## 这一轮（本机：v0.3.0 全部 + 修提交作者）
+下一版换了：**v0.4.0 改做站点规则、文章里的图、多页合并**（原 v0.5），**接 Peck 挪到 v0.5.0**（原 v0.4；Peck 还在开发，同一个 App 一次只接一个引擎）。Phase 计划在 `ROADMAP.md`「v0.4.0」，站主看过再开工。
 
-- **提交作者**：云端 `cloud/v0.2` 的 9 笔提交作者是 `Claude <noreply@anthropic.com>`。没推过的 `main` 上用 `git filter-branch` 改成了仓库配好的作者（内容、日期不变，GitHub 上的 `b0511dd` 没动，推 `main` 仍是快进）；没推过的 tag `v0.2.0` 跟着移到了新提交。`CLAUDE.md`「六」给云端加了「提交前先设作者」。
-- **Phase 1 抓取**：`src/transport.rs`（`Transport`、默认的 `Ureq`：Mac 系统 TLS / 别的平台 rustls、解压 gzip br、只连钉住的地址、读到上限就停、逐块查取消）；`src/fetch.rs`（网址检查、内网检查、自己跟跳转、同站、https 降成 http 不跟、上限、跟到别的网站不带 Cookie、`HostPacer`）；`src/fake.rs`（feature `fake` 的模拟服务）。
-- **Phase 2 Tavily**：`src/tavily.rs`。参数、计点、错误码照官方文档（2026-11-27 核对）。
-- **Phase 3 工具包**：`src/tools/` 拆成 `mod.rs`（`Web`、`toolkit_with`、共用的错误和用量）、`extract.rs`、`fetch.rs`、`search.rs`；四份新清单，`web_find` 可只给网址。
-- **Phase 4 真实核对**：
-  - 本机抓 `docs/real-pages.txt` 的 72 个网址：58 个读到；没读到的 14 个是网站挡程序（澎湃、Stack Overflow 403）、要开 JavaScript（知网海外站、百度百科）、要登录或 cookie 跳转（万方会员、Nature 跳到 idp.nature.com）、证书对不上（kns / scjg.cnki.net）、页面撤了（统计局那篇 404）、服务挂了（古腾堡 503）。共 80 秒。
-  - 查出 2 处已修，各配了样本或测试：react.dev 看到 `Accept: text/markdown` 回 MDX 源文件（Content-Type 是 text/plain），被认成网页、正文乱、标题错 → 开头是 YAML 头的认作 Markdown，标题取 `title`（样本 `mdx-lesson`）；教育部 https 跳到 http 被说成「跳到别的网站」→ 新的 `InsecureRedirect`，说清是降成了 http（`tests/fetch.rs`）。
-  - 真跑 Tavily（`tests/real.rs` 和命令行）：搜索 basic 1 点、advanced + 新闻 2 点；取页、爬站 3 页、地图都在报价以内（不足一组时 Tavily 报 0 点、攒着下次算）；`web_fetch` 的 `via: auto` 在本机被 403 挡住时改用 Tavily 取到了 Stack Overflow 的正文。一共约 6 点（$0.05）。
-- **密钥**：站主的 Tavily 密钥从剪贴板存进了 `~/Documents/Dataset/Pomelo/key/tavily`（600），没有打印。
+## 这一轮（本机：清残留、对调版本、拟 v0.4.0 计划）
+
+- **上一轮的待办**：GitHub 上 `main`、tag `v0.2.0` / `v0.3.0` 已推，`cloud/v0.2` 已删（`git ls-remote` 核过）。本机残留清掉了：`git stash drop`（Mac 上 `README.md` / `readme.md` 撞车留下的假改动，内容核过是 `tests/fixtures/html/README.md` 被 `kestrel` 样本盖掉）；`git update-ref -d` 删了 `refs/original/refs/heads/main`、`refs/original/refs/tags/v0.2.0`（改作者时 `filter-branch` 留的旧指针）。剪贴板里已经不是 Tavily 密钥了（只比对、没打印），没动。
+- **对调 v0.4.0 和 v0.5.0**：`ROADMAP.md`（版本表、各 App 接入进度、验收清单）、`README.md`、`docs/design.md`（§4、§7、§8、§9、§10）、`docs/toolkit.md`、`CHANGELOG.md`（v0.2.0「App 怎么接」里的版本号）；总仓库 `ROADMAP.md` 的 engine-web 两处。
+- **新 v0.4.0 计划**（站主 2026-11-28 用提问定）：
+  - 全部在本机做；不花钱（只用本机抓取）。
+  - 站点：原定四个（知网文献页、arXiv 摘要页、维基百科、GitHub 的 README 和 issue）+ 微信公众号文章 + 万方、维普文献页 + PubMed、期刊文章页。
+  - 多页文章：`web_fetch`、`web_find` 自动接着抓、合成一篇（默认最多 10 页）。
+  - 图：列出网址、说明、在哪一段；正文照旧只留说明；不顺带下载。
+  - 做法（我定，Phase 1 写进 `decisions/0008`）：每站一个 Rust 模块，规则在 Readability 之前跑，认不出就退回通用做法；只读 HTML 不调 API；`Article` 只加字段；多页的位置是「第 2 页〈方法〉第 3 段」，和单独抓那一页一样。
+- **查了知网抓不到的原因**：本机网络下 `kns.cnki.net`、`scjg.cnki.net` 交的是腾讯云 CDN 的证书（`*.cdn.myqcloud.com`），网站名对不上（`curl` 一样失败，`www.cnki.net` 正常）。不是引擎的问题，也不跳过校验；知网的真实页要站主从浏览器存。
 
 ## 测试
 
-- `./scripts/check.sh`：**通过**（Mac）。`cargo fmt --check`；`cargo test` 和 `cargo test --features fake`；两种配置的 `cargo clippy --all-targets -D warnings`。带 `fake` 一共 79 个：单元 41、`tests/fetch.rs` 8、`tests/ureq.rs` 4（本机起 HTTP 服务）、`tests/tavily.rs` 4、`tests/tools_net.rs` 7（六个工具的全部清单例子、报价、确认、用量、命令行）、`tests/toolkit.rs` 6、`tests/samples.rs` 3（50 份样本）、`tests/ported.rs` 6。
-- 真跑：`tests/real.rs` 2 个（`#[ignore]`），照下面「真跑」跑过，通过。
+- `./scripts/check.sh`：**通过**（Mac，2026-11-28；这一轮只改了文档）。`cargo fmt --check`、两种配置的 `cargo test` 和 `cargo clippy --all-targets -D warnings`，一共 139 个测试通过、0 个失败。
+- 真跑：这一轮没跑。
 
-## 已知问题（不挡发版）
+## 已知问题（不挡开发）
 
-- Tavily 的站内地图在有的站上很浅（Rust 博客首页只找到 3 个网址，换参数一样），是 Tavily 那边的；文档站正常（Tavily 文档 21 个）。
-- Nature 这类先跳到别的子域名设 cookie 再跳回来的，默认停在第一跳（同站只认「只差 `www.`」）。用户自己给的网址，App 可以放开 `follow_other_sites`；模型调用时可以换 `via: tavily`。
-- Tavily 取页没有标题（交回的 Markdown 没有一级标题时结果里就没有「标题」一行）；代码块被 Tavily 拍成一行。
-- 取正文的老问题照旧（见 `CHANGELOG.md` v0.2.0）：门户页退回整个 body 后 `<div>` 写的导航还在、`article` 模式跨行跨列的表头对不齐、`full` 模式把外框的 `<h*>` 当小标题、带站名后缀的标题照原样。
+- Tavily 的站内地图在有的站上很浅（Rust 博客首页只找到 3 个网址），是 Tavily 那边的；文档站正常。
+- Nature 这类先跳到别的子域名设 cookie 再跳回来的，默认停在第一跳。用户自己给的网址，App 可以放开 `follow_other_sites`；模型调用时可以换 `via: tavily`。
+- Tavily 取页没有标题；代码块被 Tavily 拍成一行。
+- 取正文的老问题照旧（见 `CHANGELOG.md` v0.2.0）：门户页退回整个 body 后 `<div>` 写的导航还在、`article` 模式跨行跨列的表头对不齐、`full` 模式把外框的 `<h*>` 当小标题、带站名后缀的标题照原样。维基百科的信息框、引用角标、红链网址在 v0.4.0 的规则里处理。
 - 和 Peck、Pith、Pomelo 旧实现的逐字对照在各 App 接入时做（design §7）。
 
 ## 等站主
 
-1. **push**（在 `engine-web` 目录里，`main` 先、tag 后）：
+1. **看 v0.4.0 的 Phase 计划**（`ROADMAP.md`「v0.4.0」），没问题就说「开工」。
+2. **push**（在 `engine-web` 目录、总仓库目录各一次，这一轮只有文档）：
 
    ```bash
    git push origin main
    ```
 
-   ```bash
-   git push origin v0.2.0 v0.3.0
-   ```
-
-2. **删云端分支**（`main` 推上去以后；上面是改作者之前的旧提交）：
-
-   ```bash
-   git push origin --delete cloud/v0.2
-   ```
-
-3. **两样本机的残留可以清**（都只在本机、没有内容）：`git stash drop`（Mac 上文件名撞车留下的假改动）；`git update-ref -d refs/original/refs/heads/main` 和 `git update-ref -d refs/original/refs/tags/v0.2.0`（改作者时 git 自动留的旧指针）。
-4. **剪贴板**里还有 Tavily 密钥，方便时复制点别的盖掉。
+3. **存几页程序抓不到的真实页**（Phase 1 要用，不急；能抓的我自己抓）：
+   - 要的：知网文献页 3–5 页（期刊、学位论文、会议论文各一页最好）；万方、维普文献页各 2–3 页；微信公众号文章 3–5 篇（带图的）；你常看、要翻页的文章，有的话给网址就行。
+   - 怎么存：浏览器打开那一页 →「文件」→「存储为…」→ 格式选「网页源码」（Safari）或「网页，仅 HTML」（Chrome），不要网页归档 → 存进 `engine-web/local/pages/sites/`，文件名随意。
+   - 同一个文件夹里建 `urls.txt`，一行一页：`<文件名> <网址>`。
 
 ## 真跑
 
-密钥只在验收里用：从站主的密钥文件夹复制到会话临时目录里 600 权限的文件，用环境变量交给 `#[ignore]` 的测试。不打印、不写进文档、夹具、日志和错误信息。每版上限 $1。
+密钥只在验收里用：从站主的密钥文件夹复制到会话临时目录里 600 权限的文件，用环境变量交给 `#[ignore]` 的测试。不打印、不写进文档、夹具、日志和错误信息。每版上限 $1（v0.4.0 计划不花）。
 
 ```bash
 install -m 600 ~/Documents/Dataset/Pomelo/key/tavily <会话临时目录>/tavily.key
@@ -68,4 +63,5 @@ ENGINE_WEB_TAVILY_KEY_FILE=<会话临时目录>/tavily.key cargo test --release 
 
 ## 下一轮
 
-- v0.4.0 接 Peck：在 Peck 的仓库里做（守 Peck 的 `CLAUDE.md`），开工前问站主程度。要换的是 `harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily；WebKit 渲染、一个任务内的缓存、原生搜索的路由留在 Peck。
+- 站主说「开工」后做 v0.4.0 Phase 1：规则框架和认站、`Article` 的新字段、`.expect.json` 的新字段、真实页快照（`local/pages/sites/`）、`decisions/0008`。版本号到 Phase 5 发版时再改成 0.4.0。
+- v0.5.0 接 Peck 等 Peck 手上的版本做完，在 Peck 的仓库里做（守 Peck 的 `CLAUDE.md`），开工前问站主程度。

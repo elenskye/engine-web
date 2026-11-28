@@ -127,7 +127,7 @@ pub mod tools { pub struct Web { pub fetch: FetchOptions, pub transport: Arc<dyn
 
 ## 4. 取正文
 
-- **以 Peck 那套为底**（`src/html/`：`clean` 清理、`markdown` 整理、`meta` 标题元数据、`full` 全部文字）：`dom_smoothie` 抽正文转 Markdown；不到 `min_article_chars`（默认 200 字）就退回整个 `<body>`，去掉脚本、样式、导航、页脚、侧栏、表单、iframe；`tidy_markdown`：链接改成绝对网址，图片只留说明（v0.5 起另把图的网址和说明列进 `images`），连续空行收成一个；`needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
+- **以 Peck 那套为底**（`src/html/`：`clean` 清理、`markdown` 整理、`meta` 标题元数据、`full` 全部文字）：`dom_smoothie` 抽正文转 Markdown；不到 `min_article_chars`（默认 200 字）就退回整个 `<body>`，去掉脚本、样式、导航、页脚、侧栏、表单、iframe；`tidy_markdown`：链接改成绝对网址，图片只留说明（v0.4 起另把图的网址和说明列进 `images`），连续空行收成一个；`needs_js`：正文不到 500 字而 `<script>` 有 5 个以上。
   - 和 Peck 的差别（每条都有合成样本）：
     - 抽正文前先去掉：隐藏元素（`hidden`、`aria-hidden`、`display:none`、`visibility:hidden`）；读屏专用的重复文字（类名含 `visuallyhidden`、`screenreader`、以 `sr-only` 开头，带哈希的也算）；「Skip to content」这种页内跳转链接；`role` 是 banner、navigation、contentinfo 等的站点地标；空的格式元素（图标字体的 `<i></i>`）；只有协议的链接（空的 `mailto:`，Readability 会把它拼到网页网址后面）只留文字。`<pre>` 里的 `<br>`、逐行的 `<div>`（代码高亮）写成真的换行，代码不挤成一行。
     - 退回整个 `<body>` 的条件多一条：Readability 抽出来的像页脚（不到 1000 字，大半的字在带「© 2026」「版权所有」「ICP 备」这类字样的段里；正文末尾一句「本文版权所有」不算）。退回时再去掉正文外的 `<header>`。
@@ -166,14 +166,14 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 
 | App | 搬过来的 | 留在 App 的 | 核对 |
 | --- | --- | --- | --- |
-| Peck（v0.4） | `web.rs` 的 `check_url`、`check_host`、`is_public`、`same_site`、`read_body`、`decode`、`page_of`、`html_to_markdown`、`tidy_markdown`；`search.rs` 的 Tavily 请求和错误 | 一个任务内的缓存、WebKit 渲染、存输出目录、给模型截 32 KB 的写法、原生搜索的路由、DeepSeek 搜索 | 合成样本上，旧 `html_to_markdown` 和引擎的 `article` 模式逐字一致（Peck 现有的测试搬进本仓库）；内网、跳转、类型的测试照搬 |
+| Peck（v0.5） | `web.rs` 的 `check_url`、`check_host`、`is_public`、`same_site`、`read_body`、`decode`、`page_of`、`html_to_markdown`、`tidy_markdown`；`search.rs` 的 Tavily 请求和错误 | 一个任务内的缓存、WebKit 渲染、存输出目录、给模型截 32 KB 的写法、原生搜索的路由、DeepSeek 搜索 | 合成样本上，旧 `html_to_markdown` 和引擎的 `article` 模式逐字一致（Peck 现有的测试搬进本仓库）；内网、跳转、类型的测试照搬 |
 | Pomelo（v0.6） | `files.rs::fetch_page`、`office.rs::web_article`、`skills/web.rs` 的 Tavily、`pub2md/search.rs` 里 Tavily 那条路 | 模拟网页、插件库的开关、Pub2MD 的术语查找流程、钥匙串 | 合成样本上正文一致；行为变化（多了内网检查、编码识别）在 Pomelo 的计划里写明 |
 | Pith（v0.7） | `download.rs` 的抓取部分、`content.rs` 的 `sniff`、`decode`、`html_text`（作 `full` 模式）、`tavily.rs` | 存快照、月上限检查（用引擎的报价）、Claude 网页抓取的后备、PDF 和表格等别的类型、`web_blocks` 切块存库 | `full` 模式在 Pith 的合成来源上和旧 `html_text` 逐字一致（`content.rs` 现有的测试搬进本仓库）；编码测试照搬 |
 
 ## 8. 样本和真实网页
 
-- **合成样本**（能提交，`tests/fixtures/html/`）：中文、英文文章；带表格、代码块、相对链接、图片、导航和页脚噪声的；没声明编码的 GBK 页、声明了 Big5 的页；只有脚本外壳的页；正文很短的页；不是网页的字节（PDF 头、PNG、ZIP）。v0.5 再加四个站点规则各自的合成页。每个样本旁边放期望的标题、要包含的句子、不能包含的导航文字。
-- **真实网页**（只在本机，`local/pages/`，不进 Git，版权）：站主给网址清单（`local/pages/urls.txt`，一行一个），本机 Claude 抓快照存原件和抓取日期。`cargo run --example pages` 对每页打印标题、字数、开头几行、`needs_js`、段数，结果写进 `local/out/`，人看有没有把导航当正文、有没有丢表格和链接。v0.5 每个站点规则配几页。
+- **合成样本**（能提交，`tests/fixtures/html/`）：中文、英文文章；带表格、代码块、相对链接、图片、导航和页脚噪声的；没声明编码的 GBK 页、声明了 Big5 的页；只有脚本外壳的页；正文很短的页；不是网页的字节（PDF 头、PNG、ZIP）。v0.4 再加各个站点规则的合成页。每个样本旁边放期望的标题、要包含的句子、不能包含的导航文字。
+- **真实网页**（只在本机，`local/pages/`，不进 Git，版权）：站主给网址清单（`local/pages/urls.txt`，一行一个），本机 Claude 抓快照存原件和抓取日期。`cargo run --example pages` 对每页打印标题、字数、开头几行、`needs_js`、段数，结果写进 `local/out/`，人看有没有把导航当正文、有没有丢表格和链接。v0.4 每个站点规则配几页。
 - **模拟服务**：Tavily 和抓取都走 `Transport`，测试不连外网。
 
 ## 9. 云端和本机的分工
@@ -182,12 +182,12 @@ pub struct Loc { pub heading_path: Vec<String>, pub paragraph: u32, pub kind: Bl
 | --- | --- | --- |
 | v0.2 | 骨架、合成样本、取正文、元数据、编码和类型、Peck 和 Pith 测试的搬运；工具包和 find（等 engine-core v0.2.0） | 审核、合并；真实网页批量核对；发版 |
 | v0.3 | 站主定全部在本机做 | 抓取、Tavily 四个接口、报价、`Fake`、真跑 Tavily（$1 内）、真实网页抓取核对、发版 |
-| v0.4、v0.6、v0.7 | 引擎这边要补的小改动 | 接进 Peck、Pomelo、Pith（在 App 仓库里） |
-| v0.5 | 站点规则（合成页）、文章里的图、多页合并 | 站点规则的真实页核对 |
+| v0.4 | 站主定全部在本机做（2026-11-28） | 站点规则、文章里的图、多页合并，合成页和真实页核对，发版 |
+| v0.5、v0.6、v0.7 | 引擎这边要补的小改动 | 接进 Peck、Pomelo、Pith（在 App 仓库里） |
 
 云端做完在分支里更新 `HANDOFF.md`，写清哪些没在 Mac 上验。
 
 ## 10. 还没定的（在对应 Phase 里定，写进决定）
 
-- 站点规则怎么写：每站一个 Rust 模块，还是声明式的选择器表（v0.5 Phase 1）。
+- 站点规则怎么写：倾向每站一个 Rust 模块、共用一套小工具（`ROADMAP.md` v0.4.0「做法」），v0.4 Phase 1 定稿，写进 `decisions/0008`。
 - `web_fetch` 交回 PDF 原件时，附件太大怎么交（看 engine-core 的附件约定）。

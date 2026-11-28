@@ -8,7 +8,7 @@ Peck、Pith、Pomelo 共用的网页引擎（Rust 库）：搜索、抓取、取
 
 - **取正文**（v0.2，已做）：网页字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别（GBK、Big5、Shift_JIS 等不乱码）、类型判断（PDF、图片、Office 等认出来交回 App）、「可能要开 JavaScript」的提示；抽正文和全部文字两种模式；`find` 在网页里找字。
 - **抓取和搜索**（v0.3，已做）：网址 → 内容，自己跟同一个网站里的跳转，有超时和大小上限，解压 gzip / br，默认不抓本机和内网（钉住检查过的地址再连）；Tavily 的搜索、取页、爬站、站内地图，本地报价、按 Tavily 报的点数记花费，爬站和地图先问。
-- **站点规则**（v0.5）：知网文献页、arXiv 摘要页、维基百科、GitHub 的 README 和 issue；文章里的图；多页文章合并。
+- **站点规则**（v0.4，计划中）：知网文献页、arXiv 摘要页、维基百科、GitHub 的 README 和 issue；文章里的图；多页文章合并。
 - **给 Agent 的工具包**（已做）：`web_extract`、`web_find`、`web_fetch`、`web_search`、`web_crawl`、`web_map`。一份工具清单出 Rust 接口、App 里的工具和命令行（格式来自 engine-core）。
 
 ## App 怎么引用

@@ -78,7 +78,7 @@ engine-core tag `v0.2.0`；`dom_smoothie ^0.18.2`、`dom_query ^0.28.0`（和 Pe
 
 ### App 怎么接
 
-还没有 App 接（Peck v0.4、Pomelo v0.6、Pith v0.7）。接的时候：
+还没有 App 接（Peck v0.5、Pomelo v0.6、Pith v0.7）。接的时候：
 
 ```toml
 [dependencies]
