@@ -24,7 +24,10 @@ pub(super) fn extract(html: &str, base: Option<&Url>) -> Parts {
     let blocks = blocks::number(walker.out, title.as_deref());
     let links = links_in(&root, base, SKIP);
     let needs_js = needs_js(&markdown, html);
-    meta.into_parts(title, markdown, blocks, links, needs_js)
+    let images = super::images::collect(&root, base, &blocks);
+    let mut parts = meta.into_parts(title, markdown, blocks, links, needs_js);
+    parts.images = images;
+    parts
 }
 
 /// HTML 的空白折叠：连续的空白当一个空格；开头、换行和制表符后面不加。

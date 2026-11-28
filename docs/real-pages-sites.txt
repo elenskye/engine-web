@@ -57,3 +57,33 @@ https://www.anandtech.com/show/16252/mac-mini-apple-m1-tested/2
 https://www.aeaweb.org/articles?id=10.1257/jep.31.2.211
 https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00863/full
 # 挡程序、不作样本的（2026-11-28）：elifesciences（脚本验证）、mdpi、science.org、sciencedirect、peerj、royalsocietypublishing、phoronix、data.worldbank.org（403）、arstechnica（405）、link.springer.com（跳到 idp 设 cookie）、fred（HTTP/2 断开、超时）、eurostat（500）
+# —— Phase 3–4（2026-11-28）——
+# 维基百科：中文、移动版、公式多的
+https://zh.wikipedia.org/wiki/%E5%9B%BD%E9%99%85%E8%B4%A7%E5%B8%81%E5%9F%BA%E9%87%91%E7%BB%84%E7%BB%87
+https://en.m.wikipedia.org/wiki/International_Monetary_Fund
+https://en.wikipedia.org/wiki/Euler%27s_identity
+# GitHub：仓库首页、文件页、issue（长、短、带代码）
+https://github.com/BurntSushi/ripgrep
+https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md
+https://github.com/tauri-apps/tauri
+https://github.com/BurntSushi/ripgrep/issues/176
+https://github.com/BurntSushi/ripgrep/issues/3617
+https://github.com/rust-lang/rust/issues/166687
+https://github.com/tauri-apps/tauri/issues/3725
+# 微信公众号（中国大陆的网站：2026-11-28 本机抓得到，但会时不时回验证页，重抓可能拿到验证页；验证页由 bot_check 认出）
+https://mp.weixin.qq.com/s/OUyTh8W3-utxR37QFb76Wg
+https://mp.weixin.qq.com/s/JDuPXqgpGuvxiUFYza-d8Q
+https://mp.weixin.qq.com/s/VmDXdwtVmi5uWh1Ca_ivqQ
+https://mp.weixin.qq.com/s/EagVMSQR_v3415X7-CuBqw
+https://mp.weixin.qq.com/s/skAuwGyE_O29tkm041EBuA
+# 翻页的长文章：@IT（_2.html、Shift_JIS）、ComputerBase（/seite-2）、Discourse 论坛（?page=2）
+https://atmarkit.itmedia.co.jp/ait/articles/2611/18/news009.html
+https://atmarkit.itmedia.co.jp/ait/articles/2611/18/news009_2.html
+https://atmarkit.itmedia.co.jp/ait/articles/2611/18/news009_3.html
+https://atmarkit.itmedia.co.jp/ait/articles/2610/08/news008.html
+https://www.computerbase.de/artikel/gaming/anno-117-erwachen-des-deltas-benchmark-test.100089/
+https://www.computerbase.de/artikel/gaming/anno-117-erwachen-des-deltas-benchmark-test.100089/seite-2
+https://www.computerbase.de/artikel/gaming/anno-117-erwachen-des-deltas-benchmark-test.100089/seite-4
+https://www.computerbase.de/artikel/gehaeuse/cooler-master-haf-ii-500-test.100004/
+https://users.rust-lang.org/t/whats-your-2026-wish-list-for-rust/137259
+https://users.rust-lang.org/t/whats-your-2026-wish-list-for-rust/137259?page=2

@@ -19,6 +19,7 @@
 | `paper` | 文献信息；`null` 就要没有。对象里写了哪项查哪项：`title`、`journal`、`publisher`、`volume`、`issue`、`pages`、`number`、`published`、`doi`、`pdf_url` 相等；`authors`、`keywords` 逐个相等；`affiliations` 要出现在某位作者的机构里；`abstract` 是摘要里要有的一句；`ids` 是 `{编号种类: 值}` |
 | `images` | `{"count": 张数, "list": [{url, alt, caption, paragraph}]}`：写了哪项比哪项 |
 | `next_page` | 找到的下一页；`null` 就要没有 |
+| `bot_check` | 认出的验证页是哪一家（`Cloudflare`、`unknown`……）；`null` 就要不是验证页 |
 | `article`、`full` | 各模式的期望，见下 |
 
 各模式里：
@@ -31,5 +32,6 @@
 | `max_chars` | `markdown` 最多几个字 |
 | `links` | `links` 里要有的网址 |
 | `blocks` | `[{contains, kind, path}]`：包含这句的那一段，种类和标题路径要对 |
+| `images` | 同上面的 `images`，只查这个模式（两种模式找到的图不一样时用） |
 
 另外每次都查：段号从 1 连续、没有空段、正文为空时分段也为空。

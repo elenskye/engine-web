@@ -70,6 +70,7 @@ pub(crate) fn number(raw: Vec<Raw>, title: Option<&str>) -> Vec<Block> {
             paragraph: out.len() as u32 + 1,
             kind: r.kind,
             text: r.text,
+            page: None,
         });
     }
     out

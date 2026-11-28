@@ -1,0 +1,69 @@
+{
+  "about": "维基百科（Parsoid 写法）：信息框读成两列的表（框名、开头的小标题在表前，图挪到表前、小旗子去掉），引用角标留成「[1]」文字，参考文献每条前面写同样的角标（注释组的 [a] 也对得上），红链只留字，行头的 th 当普通格子，公式写成 $TeX$；去掉「其他用法」提示、edit 链接、导航框、回链",
+  "url": "https://en.wikipedia.org/wiki/Heron_River",
+  "kind": "html",
+  "title": "Heron River",
+  "rule": "wikipedia",
+  "paper": null,
+  "next_page": null,
+  "images": {
+    "count": 2,
+    "list": [
+      {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Heron_River_mouth.jpg/500px-Heron_River_mouth.jpg",
+        "caption": "The mouth of the Heron River at Port Ardel"
+      },
+      {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Heron_falls.jpg/500px-Heron_falls.jpg",
+        "caption": "Falls near the source"
+      }
+    ]
+  },
+  "article": {
+    "contains": [
+      "**Heron River; Rivière du Héron**",
+      "| Country | [Example Republic](https://en.wikipedia.org/wiki/Example_Republic) |",
+      "| Length | 412 km (256 mi)\\[1\\] |",
+      "| Tributaries | Little Heron; Marsh Brook |",
+      "Port Ardel.\\[1\\]\\[a\\]",
+      "`$\\frac{900}{412\\,000} \\approx 0.22\\%$`",
+      "| Grey Hills | 12 |",
+      "- \\[a\\] Older maps give 398 km.",
+      "- \\[1\\] National River Survey (2024). *Rivers of the Example Republic*. p. 17.",
+      "- \\[2\\] Atlas of Example Rivers, 3rd ed."
+    ],
+    "excludes": [
+      "For the bird",
+      "edit",
+      "redlink",
+      "Kite",
+      "From Wikipedia",
+      "Random article",
+      "Categories",
+      "^",
+      "River in the Example Republic"
+    ],
+    "blocks": [
+      {
+        "contains": "Flow is measured at two gauges.",
+        "kind": "paragraph",
+        "path": [
+          "Course"
+        ]
+      },
+      {
+        "contains": "National River Survey (2024).",
+        "kind": "list_item",
+        "path": [
+          "References"
+        ]
+      }
+    ]
+  },
+  "full": {
+    "contains": [
+      "Heron River",
+      "Kite"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "about": "挡程序的验证页（照 Cloudflare 的写法）：认出来记在 bot_check，工具就报 bot_check，不把那几句话当正文交给模型",
+  "url": "https://shop.example.com/item/42",
+  "kind": "html",
+  "bot_check": "Cloudflare",
+  "article": {
+    "contains": [
+      "Checking if the site connection is secure"
+    ]
+  }
+}

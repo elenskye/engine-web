@@ -10,15 +10,18 @@ use serde::{Deserialize, Serialize};
 pub struct Loc {
     /// 这一段上面的各级小标题（不含文章标题）。
     pub heading_path: Vec<String>,
-    /// 第几段，全文连续，从 1 起。
+    /// 第几段，全文连续，从 1 起（合并了几页时每页各自从 1 数）。
     pub paragraph: u32,
     pub kind: BlockKind,
+    /// 合并了几页时在第几页（从 1 起）；只有一页时没有。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub page: Option<u32>,
 }
 
 impl Loc {
-    /// 给模型的写法：「〈引言 › 方法〉第 3 段」；没有小标题时「第 3 段」。
+    /// 给模型的写法：「〈引言 › 方法〉第 3 段」；没有小标题时「第 3 段」；合并了几页时前面加「第 2 页」。
     pub fn label(&self) -> String {
-        crate::article::label(&self.heading_path, self.paragraph)
+        crate::article::label(self.page, &self.heading_path, self.paragraph)
     }
 }
 
@@ -28,6 +31,7 @@ impl From<&Block> for Loc {
             heading_path: b.heading_path.clone(),
             paragraph: b.paragraph,
             kind: b.kind,
+            page: b.page,
         }
     }
 }

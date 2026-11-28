@@ -24,6 +24,15 @@ fn tavily(endpoint: &str, body: Value) -> (String, Response) {
     )
 }
 
+/// 分三页的文章第 `n` 页的网址。
+fn story(n: u32) -> String {
+    if n == 1 {
+        "https://news.example.com/city/2026/metro-history.html".into()
+    } else {
+        format!("https://news.example.com/city/2026/metro-history_{n}.html")
+    }
+}
+
 /// 清单例子用到的网址都在这里。
 fn fake() -> Fake {
     let mut fake = Fake::new()
@@ -46,7 +55,19 @@ fn fake() -> Fake {
             "https://app.example.com/dashboard",
             "text/html",
             fixture("spa-shell.html"),
+        )
+        .page(
+            "https://shop.example.com/item/42",
+            "text/html; charset=UTF-8",
+            fixture("bot-check.html"),
         );
+    for n in 1..=3 {
+        fake = fake.page(
+            &story(n),
+            "text/html; charset=utf-8",
+            fixture(&format!("story-{n}.html")),
+        );
+    }
     for (url, resp) in [
         tavily(
             "extract",
@@ -449,4 +470,113 @@ fn cli_asks_for_yes_before_spending() {
         "--json-only",
     ]);
     assert_eq!((code, &reply["via"]), (0, &json!("local")));
+}
+
+#[test]
+fn multi_page_articles_are_merged_and_stop_on_failures() {
+    let host = LocalHost::default();
+    let cancel = Cancel::new();
+    let ctx = with_keys(&host, &cancel, &KEY);
+    let fake = Arc::new(fake());
+    let tk = toolkit(fake.clone());
+    let out = tk
+        .call("web_fetch", &json!({"url": story(1)}), &ctx)
+        .unwrap();
+    assert_eq!(out.data["pages"], json!([story(1), story(2), story(3)]));
+    assert!(out.text.contains(&format!("第 2 页：{}", story(2))));
+    assert!(out.text.contains("1993 年 10 月") && out.text.contains("2032 年以前"));
+    assert!(out.text.contains("文中的图（3 张"), "{}", out.text);
+    assert!(out.text.contains(
+        "- 第 2 页第 3 段后：二号线通车那天的站台 https://news.example.com/img/2026/metro-2004.jpg"
+    ));
+    assert_eq!(out.data["images"][1]["page"], 2);
+    assert!(out.data.get("stopped").is_none());
+
+    // 上限：只合两页，写明后面还有
+    let two = tk
+        .call("web_fetch", &json!({"url": story(1), "max_pages": 2}), &ctx)
+        .unwrap();
+    assert_eq!(two.data["pages"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        two.data["stopped"],
+        json!({"reason": "limit", "next": story(3)})
+    );
+    assert!(two.text.contains(&format!("后面还有：{}", story(3))));
+
+    // 第 3 页取不到：交回前两页、写明哪一页为什么
+    let broken = Arc::new(fake_without_page_three());
+    let out = toolkit(broken)
+        .call("web_fetch", &json!({"url": story(1)}), &ctx)
+        .unwrap();
+    assert_eq!(out.data["pages"].as_array().unwrap().len(), 2);
+    assert_eq!(out.data["stopped"]["reason"], "failed");
+    assert_eq!(out.data["stopped"]["error"], "http_status");
+    assert!(
+        out.text
+            .contains(&format!("{} 没取到（网站回了 HTTP 500）", story(3))),
+        "{}",
+        out.text
+    );
+
+    // web_find 也接着抓
+    let found = tk
+        .call("web_find", &json!({"url": story(1), "query": "九百"}), &ctx)
+        .unwrap();
+    assert!(found.text.starts_with("没有找到"));
+    let found = tk
+        .call(
+            "web_find",
+            &json!({"url": story(1), "query": "一百万人次"}),
+            &ctx,
+        )
+        .unwrap();
+    assert!(
+        found.text.contains("第 2 页〈二号线和三号线：织成一张网〉"),
+        "{}",
+        found.text
+    );
+    assert_eq!(found.data["hits"][0]["location"]["page"], 2);
+}
+
+/// 第 3 页回 500 的模拟服务。
+fn fake_without_page_three() -> Fake {
+    let mut fake = Fake::new();
+    for n in 1..=2 {
+        fake = fake.page(
+            &story(n),
+            "text/html; charset=utf-8",
+            fixture(&format!("story-{n}.html")),
+        );
+    }
+    fake.reply(Method::Get, &story(3), Response::new(500))
+}
+
+#[test]
+fn bot_check_pages_are_errors_and_auto_falls_back_to_tavily() {
+    let host = LocalHost::default();
+    let cancel = Cancel::new();
+    let ctx = with_keys(&host, &cancel, &KEY);
+    let tk = toolkit(Arc::new(fake()));
+    let err = tk
+        .call(
+            "web_fetch",
+            &json!({"url": "https://shop.example.com/item/42"}),
+            &ctx,
+        )
+        .unwrap_err();
+    assert_eq!(err.kind, "bot_check");
+    assert!(err.message.contains("Cloudflare"), "{}", err.message);
+    assert!(err.hint.contains("via: tavily"));
+    let out = tk
+        .call(
+            "web_fetch",
+            &json!({"url": "https://shop.example.com/item/42", "via": "auto"}),
+            &ctx,
+        )
+        .unwrap();
+    assert_eq!(out.data["via"], "tavily");
+    assert_eq!(
+        out.data["fallback_from"],
+        "网站回的是挡程序的验证页（Cloudflare），不是正文。"
+    );
 }

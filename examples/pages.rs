@@ -77,6 +77,7 @@ fn main() {
                 }
                 write(&out, &name, "article.md", &a, &url);
                 write(&out, &name, "full.txt", &f, &url);
+                write_images(&out, &name, &a);
                 summary.push_str(&format!(
                     "| {name} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
                     a.kind.key(),
@@ -161,6 +162,31 @@ fn field(json: &str, key: &str) -> Option<String> {
     Some(rest[..end].to_string())
 }
 
+/// 文中的图（`article` 模式）：一行一张，另存一份，不混进正文的结果（方便和旧版逐字比）。
+fn write_images(out: &Path, name: &str, a: &Article) {
+    if a.images.is_empty() {
+        return;
+    }
+    let lines: Vec<String> = a
+        .images
+        .iter()
+        .map(|i| {
+            format!(
+                "{}\t{}\t{}\t{}",
+                i.paragraph.map_or("—".into(), |p| format!("第 {p} 段")),
+                i.url,
+                i.alt.as_deref().unwrap_or("—"),
+                i.caption.as_deref().unwrap_or("—"),
+            )
+        })
+        .collect();
+    fs::write(
+        out.join(format!("{name}.images.txt")),
+        lines.join("\n") + "\n",
+    )
+    .expect("写不了图的列表");
+}
+
 fn write(out: &Path, name: &str, suffix: &str, a: &Article, url: &str) {
     let mut text = format!(
         "<!-- {url} · {} · {} · {} 段 · needs_js {} -->\n",
@@ -174,6 +200,24 @@ fn write(out: &Path, name: &str, suffix: &str, a: &Article, url: &str) {
     }
     if let Some(rule) = a.rule {
         text.push_str(&format!("<!-- 规则：{rule} -->\n"));
+        let meta = [
+            ("作者", &a.byline),
+            ("日期", &a.published),
+            ("站名", &a.site),
+        ]
+        .iter()
+        .filter_map(|(k, v)| v.as_ref().map(|v| format!("{k} {v}")))
+        .collect::<Vec<_>>()
+        .join(" · ");
+        if !meta.is_empty() {
+            text.push_str(&format!("<!-- 元数据：{meta} -->\n"));
+        }
+    }
+    if let Some(next) = &a.next_page {
+        text.push_str(&format!("<!-- 下一页：{next} -->\n"));
+    }
+    if let Some(by) = a.bot_check {
+        text.push_str(&format!("<!-- 验证页：{by} -->\n"));
     }
     if let Some(p) = &a.paper {
         let authors: Vec<&str> = p.authors.iter().map(|a| a.name.as_str()).collect();

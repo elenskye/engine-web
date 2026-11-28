@@ -1,0 +1,17 @@
+{
+  "about": "GitHub 的代码文件：网页里没有渲染好的 Markdown，从 JSON 数据块的 rawLines 拼成一段代码（带语言）；标题「仓库 / 路径」",
+  "url": "https://github.com/example/heron/blob/main/src/lib.rs",
+  "kind": "html",
+  "title": "example/heron / src/lib.rs",
+  "rule": "github",
+  "article": {
+    "exact": "```rust\n//! Heron: Markdown in, HTML out.\n\npub fn build(src: &str) -> String {\n    format!(\"<p>{src}</p>\")\n}\n```",
+    "blocks": [
+      {
+        "contains": "pub fn build",
+        "kind": "code",
+        "path": []
+      }
+    ]
+  }
+}

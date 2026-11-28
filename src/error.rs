@@ -29,6 +29,10 @@ pub enum Error {
     NotWeb(Binary),
     /// 抽不出正文（工具层在正文为空时交，`extract` 本身不交）。
     NoArticle,
+    /// 网站回的是挡程序的验证页（`by` 是哪一家，认不出是 `unknown`；工具层见到 `Article::bot_check` 时交）。
+    BotCheck {
+        by: &'static str,
+    },
     /// find 的 `under` 指的小标题网页里没有。
     NoHeading,
     /// 超过大小上限（v0.3 抓取用；交回前面那部分，不算失败）。
@@ -66,6 +70,7 @@ impl Error {
             Self::HttpStatus { .. } => "http_status",
             Self::NotWeb(_) => "not_web",
             Self::NoArticle => "no_article",
+            Self::BotCheck { .. } => "bot_check",
             Self::NoHeading => "no_heading",
             Self::TooLarge => "too_large",
             Self::Network => "network",
@@ -108,6 +113,8 @@ impl fmt::Display for Error {
                 write!(f, "这是{gap}{label}，不是网页。")
             }
             Self::NoArticle => f.write_str("这个网页里没读到正文。"),
+            Self::BotCheck { by: "unknown" } => f.write_str("网站回的是挡程序的验证页，不是正文。"),
+            Self::BotCheck { by } => write!(f, "网站回的是挡程序的验证页（{by}），不是正文。"),
             Self::NoHeading => f.write_str("网页里没有这个小标题。"),
             Self::TooLarge => f.write_str("网页太大，只收了前面一部分。"),
             Self::Network => f.write_str("连不上这个网站。"),
@@ -228,6 +235,8 @@ mod tests {
             (Error::HttpStatus { status: 500 }, "http_status"),
             (Error::NotWeb(Binary::Other), "not_web"),
             (Error::NoArticle, "no_article"),
+            (Error::BotCheck { by: "Cloudflare" }, "bot_check"),
+            (Error::BotCheck { by: "unknown" }, "bot_check"),
             (Error::NoHeading, "no_heading"),
             (Error::TooLarge, "too_large"),
             (Error::Network, "network"),

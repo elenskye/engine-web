@@ -1,7 +1,7 @@
 //! arXiv 摘要页（`arxiv.org/abs/…`）：正文是摘要和一张「标签 | 值」表。去掉「Title:」「Abstract:」这些标签，
 //! 表改成列表，全文的链接（PDF、HTML、TeX 源文件）留一行，提交记录一版一行。题名、作者、PDF 另在文献信息里。
 
-use super::{Site, escape, label_table_to_list, text_of, unlink};
+use super::{BLANK, Site, escape, label_table_to_list, text_of, unlink};
 use dom_query::{NodeRef, Selection};
 use regex::Regex;
 use std::sync::OnceLock;
@@ -28,6 +28,7 @@ pub(super) const SITE: Site = Site {
         ".button-and-tooltip",
     ],
     shape: Some(shape),
+    ..BLANK
 };
 
 fn shape(root: &NodeRef) {

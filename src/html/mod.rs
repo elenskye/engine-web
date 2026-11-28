@@ -6,10 +6,13 @@
 //!
 //! 标题和元数据两种模式共用（`meta`）。和 Peck、Pith 的差别见 `docs/design.md` §4。
 
+mod bot;
 mod clean;
 mod full;
+mod images;
 mod markdown;
 mod meta;
+mod next;
 mod paper;
 mod sites;
 
@@ -34,6 +37,12 @@ pub(crate) struct Parts {
     /// 用上的站点规则。
     pub rule: Option<&'static str>,
     pub paper: Option<crate::Paper>,
+    /// 挡程序的验证页是哪一家（`bot::detect`）。
+    pub bot_check: Option<&'static str>,
+    /// 文中的图（`images::collect`）。
+    pub images: Vec<crate::Image>,
+    /// 这一页里的「下一页」（`next::next_page`）。
+    pub next_page: Option<String>,
 }
 
 /// 不读的元素（Pith 的 `SKIP`）：`full` 模式走树、`<pre>` 取字时跳过。
@@ -91,6 +100,7 @@ const JS_SCRIPTS: usize = 5;
 const JS_EMPTY_CHARS: usize = 20;
 
 pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> Parts {
+    let original = html;
     // 站点规则（decisions/0008）：两种模式都先做 `fix`，article 模式再选正文的根
     let site = sites::detect(base);
     // 文献信息（两种模式一样）；article 模式顺带去掉参考文献后面的查找链接
@@ -121,6 +131,22 @@ pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> 
         }
     }
     parts.paper = paper;
+    parts.bot_check = bot::detect(original, parts.title.as_deref(), &parts.markdown);
+    parts.next_page = base.and_then(|b| next::next_page(&page, b));
+    // 站点自己写的元数据（公众号名、发布时间这类）最后盖上
+    if let (Some(meta), Some(url)) = (site.and_then(|s| s.meta), base) {
+        let m = meta(&page, url);
+        for (to, from) in [
+            (&mut parts.title, m.title),
+            (&mut parts.byline, m.byline),
+            (&mut parts.published, m.published),
+            (&mut parts.site, m.site),
+        ] {
+            if from.is_some() {
+                *to = from;
+            }
+        }
+    }
     parts
 }
 
@@ -133,7 +159,7 @@ fn readability_config() -> dom_smoothie::Config {
 
 fn article(html: &str, base: Option<&Url>, min_chars: usize, site: Option<&sites::Site>) -> Parts {
     let cleaned = clean::prepare(html);
-    let cleaned = match site.and_then(|s| sites::narrow(s, &cleaned)) {
+    let cleaned = match site.and_then(|s| sites::narrow(s, html, &cleaned)) {
         Some(sites::Narrowed::Root(fragment)) => return from_root(html, &cleaned, &fragment, base),
         Some(sites::Narrowed::Page(page)) => page,
         None => cleaned,
@@ -148,6 +174,8 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize, site: Option<&sites
         Some(a) => (a.text_content.to_string(), links_in_html(&a.content, base)),
         None => (String::new(), Vec::new()),
     };
+    // 正文是从哪份 HTML 转出来的（找图用）
+    let mut source = parsed.as_ref().map(|a| a.content.to_string());
     if text.trim().chars().count() < min_chars || looks_like_footer(&text) {
         // 退回整个 <body>：另起一份，去掉站点的页眉、导航这类地标（标题还从原来那份取）
         let doc = Document::from(cleaned.as_str());
@@ -166,6 +194,7 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize, site: Option<&sites
         if whole.trim().chars().count() > text.trim().chars().count() {
             text = whole;
             links = whole_links;
+            source = body.nodes().first().map(|n| n.html().to_string());
         }
     }
     let markdown = markdown::tidy(&text, base);
@@ -182,7 +211,17 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize, site: Option<&sites
     let title = meta::title_of(&meta.title, meta.site.as_deref(), &doc);
     let blocks = blocks::number(blocks::from_markdown(&markdown), title.as_deref());
     let needs_js = needs_js(&markdown, html);
-    meta.into_parts(title, markdown, blocks, links, needs_js)
+    let images = source
+        .map(|s| {
+            let doc = Document::from(s.as_str());
+            let body = doc.select("body");
+            let root = body.nodes().first().copied().unwrap_or_else(|| doc.root());
+            images::collect(&root, base, &blocks)
+        })
+        .unwrap_or_default();
+    let mut parts = meta.into_parts(title, markdown, blocks, links, needs_js);
+    parts.images = images;
+    parts
 }
 
 /// 站点规则选出了正文的根：直接转 Markdown（不再过 Readability），元数据照通用做法读。
@@ -197,7 +236,10 @@ fn from_root(html: &str, cleaned: &str, fragment: &str, base: Option<&Url>) -> P
     let title = meta::title_of(&meta.title, meta.site.as_deref(), &Document::from(cleaned));
     let blocks = blocks::number(blocks::from_markdown(&markdown), title.as_deref());
     let needs_js = needs_js(&markdown, html);
-    meta.into_parts(title, markdown, blocks, links, needs_js)
+    let images = images::collect(&root, base, &blocks);
+    let mut parts = meta.into_parts(title, markdown, blocks, links, needs_js);
+    parts.images = images;
+    parts
 }
 
 /// 可能要开 JavaScript：正文不到 500 字而有 5 个以上脚本（Peck 的规则）；

@@ -183,6 +183,14 @@ fn check(tag: &str, a: &Article, expect: &Value, mode: &Value, failures: &mut Ve
     if let Some(want) = expect.get("images") {
         check_images(&a.images, want, &mut fail);
     }
+    if let Some(want) = mode.get("images") {
+        check_images(&a.images, want, &mut fail);
+    }
+    if let Some(by) = expect.get("bot_check") {
+        if a.bot_check != by.as_str() {
+            fail(format!("bot_check 应为 {by}，实际 {:?}", a.bot_check));
+        }
+    }
     for want in strs(&mode["contains"]) {
         if !a.markdown.contains(want) {
             fail(format!("正文里没有 {want:?}"));

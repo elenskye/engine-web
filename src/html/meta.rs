@@ -60,6 +60,9 @@ impl Meta {
             needs_js,
             rule: None,
             paper: None,
+            bot_check: None,
+            images: Vec::new(),
+            next_page: None,
         }
     }
 }

@@ -1,44 +1,112 @@
 # HANDOFF
 
-更新：2026-11-28 · **v0.4.0 Phase 1、2 完成**（没打 tag，版本号还是 0.3.0）· 本机 Claude Code
+更新：2026-11-28 · **v0.4.0 Phase 1–4 完成**（没打 tag，版本号还是 0.3.0）· 本机 Claude Code
 
 > 准则更新（2026-11-28）：`CLAUDE.md`「五」的「花钱的调用」换成「花钱的规矩」：一次超过 $0.5 或算不出、Tavily 24 小时合计（所有 App 一起）超过 $5 才问站主，否则直接调；引擎算、引擎记共用账本，App 从引擎取（总仓库 `docs/decisions/0011`）。「三」加了「引擎带的大文件」（App 用 `cp -c` 放一份 APFS 克隆，`0012`），本引擎现在没有。Tavily 的代码 v0.5.0 接 Peck 前改（`ROADMAP.md`）。
 
 ## 现在在哪
 
-v0.3.0 已发（取正文、抓取、Tavily，六个工具）。v0.4.0 在做：站点规则的框架、`Article` 的新字段、文献信息、arXiv / PLOS / AEA / Nature 四条规则做完了；维基百科、GitHub、公众号（Phase 3），图和多页（Phase 4），收尾发版（Phase 5）没做。计划和状态在 `ROADMAP.md`「v0.4.0」，做法在 `docs/decisions/0008`。
+v0.3.0 已发（取正文、抓取、Tavily，六个工具）。v0.4.0 只剩 Phase 5（收尾、文档、发版）。已经做完的有：
+- 站点规则：arXiv、PLOS、AEA、Nature、维基百科、GitHub、公众号
+- 文献信息
+- 文中的图
+- 多页合并
+- 认出挡程序的验证页
 
-## 这一轮（本机：v0.4.0 Phase 1–2）
+计划和状态在 `ROADMAP.md`「v0.4.0」，做法在 `docs/decisions/0008`。
 
-站主 2026-11-28 定：中国大陆有网络问题的网站不抓、不作样本，只抓国际上程序拿得到的；知网、万方、维普移出 v0.4.0（提问定）。PubMed 现在对一切程序回 cookie 验证页，照同样的理由不做（同一批文献走 PMC）。
+## 这一轮（本机：v0.4.0 Phase 3–4）
 
-- **Phase 1 底子**（commit `159088f`）：
-  - `src/article.rs`：`Article` 加 `rule`、`paper`、`images`、`next_page`、`pages`；新类型 `Paper`、`Author`、`PaperId`、`Image`（可序列化）。`images`、`next_page`、`pages` 到 Phase 4 才填。
-  - `src/html/sites/mod.rs`：`Site`（`key`、`matches`、`fix`、`root`、`drop`、`shape`）、认站、`fix`、`narrow`；选不到根或根里不到 20 字就退回通用做法。`src/html/mod.rs` 接进去（`from_root` 直接转 Markdown）。
-  - `tests/samples.rs` 和 `tests/fixtures/html/README.md`：`.expect.json` 能写 `rule`、`paper`、`images`、`next_page`（故意写错一处，两种模式都报出来了）。
-  - 工具 `data` 加 `rule`、`paper`、`images`、`next_page`、`pages`；`examples/pages` 打印规则和文献。
-  - `docs/decisions/0008-site-rules.md`。
-- **Phase 2 文献页**（这一轮的第二笔 commit）：
-  - `src/html/paper.rs`：读 `citation_*`、PRISM、Dublin Core；有 `citation_title` 或 PRISM 刊名 + DOI 才算文献页，只有 Dublin Core 的不算。作者和机构、ORCID、卷期页、报告号、DOI（去前缀）、PDF（补成绝对网址）、arXiv / PMID / ISSN 这些编号、关键词、摘要（去标签）。有文献信息时标题用 `citation_title`（修好了 Frontiers 的标题只有「Frontiers」）。`article` 模式去掉参考文献后面的 Google Scholar、CAS 链接，`full` 模式不动。
-  - 规则：`src/html/sites/arxiv.rs`、`plos.rs`、`aea.rs`、`nature.rs`。
-  - `src/tools/extract.rs`：结果在标题下面列「文献：」几行（作者前 10 位、机构前 5 个、出处、编号、PDF、关键词；日期和上面一样就不重复）。
-  - 合成样本 7 份：`paper-meta`、`paper-prism`、`dc-only`、`arxiv-abs`（逐字对）、`plos-article`、`aea-article`、`nature-article`。
-  - 文档：`docs/design.md` §4、§8、§10，`docs/toolkit.md`「结果」，`tools/web_extract.json`、`tools/web_fetch.json` 的说明各加一句，`docs/real-pages-sites.txt`（v0.4 真实页的网址），`ROADMAP.md`。
+站主 2026-11-28 定了两件事：
+- 同意「认出挡程序的验证页」。原计划放 Phase 5，这一轮做了。
+- GitHub 长 issue 中间没放进网页的回复：写明缺几条、给接口网址，引擎不另调接口（提问定）。
+
+**框架**（`src/html/sites/mod.rs`）
+- `Site` 加了两项：`build`（正文在网页的 JSON 数据块里时从那里拼）和 `meta`（站点自己写的标题、作者、日期、站名，两种模式都用）。
+- 规则没写的项用 `..BLANK`。
+
+**三条规则**
+- `wikipedia.rs`：
+  - 信息框读成两列的表。
+  - 引用角标留成「[1]」，参考文献每条前面写同样的角标，两边对得上（注释组的「[a]」也一样）。
+  - 红链只留字；表格里的行头 `<th>` 当普通格子；公式写成 `$TeX$`。
+  - 去掉 edit 链接、导航框、侧栏、提示、维护模板、回链。
+- `github.rs`：
+  - README 和 Markdown 文件：读渲染好的 `article.markdown-body`。
+  - issue：从数据块拼状态、标签、关联 PR、提问和每条回复（作者、身份、时间）；中间缺的写明几条，附接口网址。
+  - 代码文件：拼成一段代码。
+  - 标题写成「仓库 / 文件」或「标题 · 仓库#号」。
+- `weixin.rs`：放出藏起来的正文；读公众号名、作者；发布时间从脚本变量 `ct` 换成北京时间。
+
+**验证页**（`src/html/bot.rs`）
+- 认法：正文不到 1500 字，网页里又有某家验证页特有的写法或那几句话，就把是哪一家记进 `Article::bot_check`。
+- 工具报新的出错种类 `bot_check`（对应 `Error::BotCheck`）；`via: auto` 见到它会改用 Tavily。
+
+**文中的图**（`src/html/images.rs`）
+- `Article::images`：每张图的网址、替代文字、图注、在第几段后面。
+- `srcset` 取最大的一张，懒加载的取 `data-src`；图标、统计图、徽章去掉。
+- 不改正文：段号是拿图前面的字去分段里找出来的。
+- 工具结果第一段的末尾列出前 20 张。
+
+**多页**（`src/html/next.rs`、`src/pages.rs`）
+- `Article::next_page`：同一主机、页号加一的才算下一页。
+- 新接口：`fetch_article`、`follow`、`Stopped`。
+- `web_fetch`、`web_find` 加 `max_pages`（默认 10，可设 1–20）。
+- 列表页（链接的字过半）不合并。
+- `Block`、`Loc`、`Image` 加 `page`，只有合了几页时才有；位置写成「第 2 页〈小标题〉第 3 段」。
+
+**工具清单**
+- `tools/web_fetch.json`、`web_find.json`、`web_extract.json`：加 `max_pages`、`bot_check` 和结果字段（`images`、`next_page`、`pages`、`stopped`），各加了例子。
+
+**合成样本 9 份**
+- `wiki-river`、`github-issue`、`github-readme`、`github-code`、`weixin-article`、`bot-check`，`story-1`–`3`（一篇分三页的文章）。
+- `tests/samples.rs`：能查 `bot_check`，也能分模式查 `images`。
+- `tests/tools_net.rs`：新测试覆盖合并、到上限停、中途失败、`web_find` 跨页找、验证页改用 Tavily。
+
+**文档**
+- `docs/decisions/0008`：Phase 3 的规则表，验证页、图、多页的做法。
+- `docs/design.md`、`docs/toolkit.md`、`ROADMAP.md`。
+- `docs/real-pages-sites.txt`：加 25 个网址。
+- `examples/pages`：另写 `*.images.txt`；打印下一页、验证页，规则页另打印元数据。
 
 ## 测试
 
-- `./scripts/check.sh`：**通过**（Mac）。`cargo fmt --check`、两种配置的 `cargo test` 和 `cargo clippy --all-targets -D warnings`；一共 161 个测试通过、0 个失败（v0.3.0 是 139 个）。
-- **真实页**：`local/pages/sites/` 抓了 46 个网址里的 35 页，其中 14 页是文献页，文献信息逐页核过（作者、机构、刊名卷期页、DOI、编号、PDF）。用上规则的 9 页逐页看过正文开头和结尾。
-- **没变的核对**：v0.3.0 代码先跑一遍存底，再和现在比（`examples/pages`）。合成样本：除了新加的 7 份，一字不变。65 页旧的真实页：变了的只有 3 页（旧的 arXiv 摘要页、Nature 用上规则，斯坦福哲学百科有 `citation_*`、正文没变），`full` 模式的正文都没变。
-- 现网：`web_fetch` arXiv 摘要页（本机抓，免费）结果对。真跑 Tavily：没跑（这一版计划不花钱）。
+**检查**：`./scripts/check.sh` 通过（Mac）。内容是 `cargo fmt --check`，以及两种配置的 `cargo test` 和 `cargo clippy --all-targets -D warnings`；两种配置一共 185 次通过、0 个失败。
+
+**没变的核对**：改代码前先用 Phase 2 的代码跑了一遍存底。
+- 没用上新规则的，两种模式的结果和改之前一字不差：旧真实页 63 页、v0.4 真实页 60 页、旧合成样本 42 份。
+- 用上规则的（维基百科 7 页、GitHub 7 页），`full` 模式的正文也没变，只有 GitHub 的标题变了。
+
+**真实页**：`local/pages/sites/` 新抓了 25 个网址（047–071），都抓到了。
+- 逐页看过正文：
+  - 维基百科：英、德、日、中文，手机版，公式多的一页。
+  - GitHub：首页、文件页、4 个 issue。
+  - 公众号：4 篇。
+- 验证页全部认出：PubMed 4 页、BMC 1 页、AnandTech 2 页、知网 1 页、公众号 1 页；别的页一页没认错。
+
+**现网**（本机抓，免费）：
+- 多页合并：@IT 3 页、ComputerBase 4 页、Discourse 论坛 7 页，都合成了一篇。
+- 维基百科、GitHub 的结果对。
+- PubMed 报 `bot_check`。
+- Hacker News 认成列表页，只写出下一页的网址，不合并。
+- 真跑 Tavily：没跑（这一版不花钱）。
 
 ## 已知问题（不挡开发）
 
-- **挡程序的验证页被当成正文**：PubMed 的「要开 cookie」页、BMC 的「Client Challenge」、AnandTech 的「Checking your browser」现在交回的是那几句话，不报错。可以认出来、报一个新的出错种类，告诉模型换 `via: tavily`（v0.4.0 范围外，见「等站主」）。
-- 作者名照网页写法（arXiv 是「Vaswani, Ashish」，PMC 是「John Jumper」），不统一。
-- Nature 正文里的引用角标有的是 `[1](#ref-CR1)`，有的带整个网址，v0.3 起就这样。
-- PLOS 的「**Citation: **」这类加粗后面带空格，Markdown 显示不成粗体，v0.3 起就这样。
-- v0.3 留下的老问题照旧：Tavily 地图在有的站上很浅；Nature 这类先跳到别的子域名设 cookie 的默认停在第一跳；Tavily 取页没有标题；门户页、表头、`full` 模式外框的 `<h*>`（见 `CHANGELOG.md` v0.2.0）。
+- **公众号会时不时回验证页**：同一篇文章，前一次抓到正文，后一次回「环境异常」。规则在抓到的 4 篇上核过；回验证页时报 `bot_check`，让模型改用 Tavily。我没去试换 User-Agent 绕过验证。
+- GitHub 的 pull request 页不在这一版范围，照通用做法抽，只抽到一部分对话。`/issues/N` 实际是 PR 时也会跳到这种页。
+- 维基百科的信息框：开头只有一格的行（「Location」这类小标题）挪到了表前，成了加粗的一段，因为 Markdown 的表头不能有空格子。只放图的排版表（GDP 列表页开头的地图）转出来是空格子的表。
+- 图在第几段是按图前面的字找的。电脑版和手机版各放一张的（Quanta），第二张的段号会对到第一张那里。
+- 合了几页时，用 `offset` 接着取会把几页都重抓一遍：`web_fetch` 不缓存，缓存归 App。
+- 链接不多的结果页（欧洲社会调查数据门户的 `?page=2`）会被当成多页文章合并；Hacker News 这种链接多的才认成列表页。
+- 小毛病：
+  - 公众号里「** TOP 1 **」这类粗体，两边带空格，显示不成粗体。
+  - @IT 的作者是「[村上純一（…），＠IT]」，带方括号（网页的 meta 就这么写）。
+- v0.3 留下的老问题照旧：
+  - Tavily 地图在有的站上很浅。
+  - Nature 这类先跳到别的子域名设 cookie 的，默认停在第一跳。
+  - Tavily 取页没有标题。
+  - 门户页、表头、`full` 模式外框的 `<h*>`（见 `CHANGELOG.md` v0.2.0）。
 
 ## 等站主
 
@@ -48,12 +116,11 @@ v0.3.0 已发（取正文、抓取、Tavily，六个工具）。v0.4.0 在做：
    git push origin main
    ```
 
-2. **说「进入 Phase 3」**再接着做（维基百科、GitHub 的 README 和 issue、微信公众号）。公众号是中国大陆的网站：Phase 3 开头先试抓，有网络问题就照你的规矩不做，用提问跟你说。
-3. **要不要认出挡程序的验证页**（推荐要，放进 Phase 5）：认出来就报出错，不把「Checking your browser」当正文交给模型。会多一个出错种类，属于范围的事，你定。
+2. **说「进入 Phase 5」**再收尾：旧网址全部重跑、补文档（CHANGELOG、README）、版本号改成 0.4.0、打 tag。
 
 ## 真实页
 
-快照只在本机、不进 Git。重抓：
+快照只在本机、不进 Git。重抓（已有的编号跳过）：
 
 ```bash
 mkdir -p local/pages/sites && cp docs/real-pages-sites.txt local/pages/sites/urls.txt && ./scripts/snapshot.sh local/pages/sites/urls.txt
@@ -77,5 +144,11 @@ ENGINE_WEB_TAVILY_KEY_FILE=<会话临时目录>/tavily.key cargo test --release 
 
 ## 下一轮
 
-- Phase 3：维基百科（信息框读成两列的表、引用角标、参考文献放最后、去掉编辑链接和导航框；真实页已有英、德、日三页和 Wikibooks 一页）、GitHub（README 页、issue 页，issue 的数据可能在网页的 JSON 数据块里）、公众号（先试抓）。规则加在 `src/html/sites/`，注册进 `SITES`；每条配合成页。改代码前先用现在的代码跑一遍 `examples/pages`（旧真实页、`local/pages/sites/`、合成样本各一份，输出放会话临时目录）存底，改完再跑、逐个比：没用上新规则的页一字不变。
-- Phase 4 要的翻页长文：这一轮找的两家（Phoronix、AnandTech）都挡程序，Phase 4 开头再找。
+Phase 5 要做的：
+- 重抓 `docs/real-pages.txt` 的旧网址，和 v0.3.0 比：没用上规则的正文要一字不差。这一轮已经在旧快照上核过。
+- 写 `CHANGELOG.md` 的 v0.4.0：`Article` 的新字段，`Block`、`Loc`、`Image` 的 `page`，`bot_check`，`fetch_article`、`follow`，`max_pages`。
+- 更新 `README.md`。
+- 版本号改成 0.4.0：`Cargo.toml`、`Cargo.lock`、`src/lib.rs` 的版本测试。
+- 跑 `./scripts/check.sh`，打 tag `v0.4.0`。
+
+比对的做法照旧：改代码前先跑一遍 `examples/pages` 存底（旧真实页、`local/pages/sites/`、合成样本各一份，输出放会话临时目录），改完再跑、逐个比。

@@ -1,7 +1,7 @@
 //! 美国经济学会的文章页（`www.aeaweb.org/articles?id=…`）：正文是文章那一栏；
 //! 期刊的页头和菜单（「About the JEP」那几列）去掉，题名在文献信息里。
 
-use super::Site;
+use super::{BLANK, Site};
 
 pub(super) const SITE: Site = Site {
     key: "aea",
@@ -16,4 +16,5 @@ pub(super) const SITE: Site = Site {
         r##"a[href="#article-information"]"##,
     ],
     shape: None,
+    ..BLANK
 };

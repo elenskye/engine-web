@@ -1,0 +1,34 @@
+{
+  "about": "GitHub 的 issue：从网页里的 JSON 数据块拼出状态、标签、关联的 PR、提问和每条回复（作者、身份、时间），关闭事件一行；被折叠的回复只写理由；网页里没放的中间几条写明几条、给出接口网址。标题「标题 · 仓库#号」，作者、日期是提问的",
+  "url": "https://github.com/example/heron/issues/42",
+  "kind": "html",
+  "title": "Crash when the config file is empty · example/heron#42",
+  "byline": "ada-moss",
+  "published": "2026-10-02T08:15:00Z",
+  "site": "GitHub",
+  "rule": "github",
+  "article": {
+    "exact": "- State: Closed as completed\n- Labels: bug\n- Pull requests: [#43](https://github.com/example/heron/pull/43) Treat an empty config as defaults (merged)\n\n## @ada-moss · 2026-10-02 08:15 UTC\n\nRunning `heron build` with an empty `heron.toml` panics.\n\n```\nthread 'main' panicked at src/config.rs:12\n```\n\n## @wei-lin (Owner) · 2026-10-02 09:00 UTC\n\nThanks! I can reproduce it with 0.3.1.\n\n## @spam-bot · 2026-10-02 09:10 UTC\n\n*Hidden by GitHub: spam*\n\n## @ada-moss (Author) · 2026-10-02 09:30 UTC\n\nSame on Windows.\n\n*5 more items (comments and events) are not in this page; GitHub loads them on demand. All comments: [GitHub API](https://api.github.com/repos/example/heron/issues/42/comments?per_page=100)*\n\n*@wei-lin closed this as completed in [#43](https://github.com/example/heron/pull/43) · 2026-10-03 11:00 UTC*",
+    "excludes": [
+      "Buy cheap",
+      "Sign in"
+    ],
+    "blocks": [
+      {
+        "contains": "Same on Windows.",
+        "kind": "paragraph",
+        "path": [
+          "@ada-moss (Author) · 2026-10-02 09:30 UTC"
+        ]
+      }
+    ]
+  },
+  "full": {
+    "contains": [
+      "Crash when the config file is empty"
+    ],
+    "excludes": [
+      "Buy cheap"
+    ]
+  }
+}

@@ -83,6 +83,9 @@ pub struct Article {
     pub rule: Option<&'static str>,
     /// 文献信息：网页里有学术元数据（`citation_*`、PRISM、Dublin Core）或站点规则认得出时才有。
     pub paper: Option<Paper>,
+    /// 网站挡程序时回的验证页：哪一家（`Cloudflare`、`微信`……，认不出是哪家的是 `unknown`）；正常网页是 `None`。
+    /// 工具见到就报 `bot_check`（`docs/decisions/0008`）。
+    pub bot_check: Option<&'static str>,
     /// 正文里的图（网址、说明、在哪一段）。
     pub images: Vec<Image>,
     /// 这一页里找到的「下一页」（同一篇文章的下一页，不是下一篇）。
@@ -136,11 +139,17 @@ pub struct PaperId {
 pub struct Image {
     /// 绝对网址（懒加载的取真正的那张，`srcset` 取最大的）。
     pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alt: Option<String>,
     /// 图注（`figcaption` 这类）。
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
     /// 在第几段（图前面最近的一段）；在正文最前面时是 `None`。
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub paragraph: Option<u32>,
+    /// 合并了几页时在第几页（从 1 起）；只有一页时是 `None`。
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<u32>,
 }
 
 /// 一段。段号全文连续、从 1 数起，小标题也算一段。
@@ -148,25 +157,28 @@ pub struct Image {
 pub struct Block {
     /// 这一段上面的各级小标题（不含文章标题；小标题这一段的路径不含它自己）。
     pub heading_path: Vec<String>,
-    /// 第几段，从 1 起。
+    /// 第几段，从 1 起（合并了几页时每页各自从 1 数）。
     pub paragraph: u32,
     pub kind: BlockKind,
     /// 这一段的文字（去掉 Markdown 记号，表格一行的格子用制表符隔开）。
     pub text: String,
+    /// 合并了几页时在第几页（从 1 起）；只有一页时是 `None`。
+    pub page: Option<u32>,
 }
 
 impl Block {
-    /// 给模型的位置写法：「〈引言 › 方法〉第 3 段」；没有小标题时「第 3 段」。
+    /// 给模型的位置写法：「〈引言 › 方法〉第 3 段」；没有小标题时「第 3 段」；合并了几页时前面加「第 2 页」。
     pub fn label(&self) -> String {
-        label(&self.heading_path, self.paragraph)
+        label(self.page, &self.heading_path, self.paragraph)
     }
 }
 
-pub(crate) fn label(heading_path: &[String], paragraph: u32) -> String {
+pub(crate) fn label(page: Option<u32>, heading_path: &[String], paragraph: u32) -> String {
+    let page = page.map(|p| format!("第 {p} 页")).unwrap_or_default();
     if heading_path.is_empty() {
-        format!("第 {paragraph} 段")
+        format!("{page}第 {paragraph} 段")
     } else {
-        format!("〈{}〉第 {paragraph} 段", heading_path.join(" › "))
+        format!("{page}〈{}〉第 {paragraph} 段", heading_path.join(" › "))
     }
 }
 
@@ -213,9 +225,14 @@ mod tests {
             paragraph: 3,
             kind: BlockKind::Paragraph,
             text: "……".into(),
+            page: None,
         };
         assert_eq!(block.label(), "〈引言 › 方法〉第 3 段");
         block.heading_path.clear();
         assert_eq!(block.label(), "第 3 段");
+        block.page = Some(2);
+        assert_eq!(block.label(), "第 2 页第 3 段");
+        block.heading_path = vec!["方法".into()];
+        assert_eq!(block.label(), "第 2 页〈方法〉第 3 段");
     }
 }

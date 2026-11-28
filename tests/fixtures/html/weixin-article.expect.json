@@ -1,0 +1,39 @@
+{
+  "about": "微信公众号文章：正文 #js_content 默认 visibility:hidden 靠脚本显示，规则先放出来（两种模式都要）；里面另外藏起来的一句照旧去掉；标题、作者、公众号名从页头读，发布时间从脚本变量 ct 按北京时间写；懒加载的图（data-src）进 images",
+  "url": "https://mp.weixin.qq.com/s/Example-Heron-01",
+  "kind": "html",
+  "title": "河口的鹭鸟又回来了",
+  "byline": "林晓雨",
+  "published": "2025-11-28T11:20:00+08:00",
+  "site": "示例河流观察",
+  "rule": "weixin",
+  "article": {
+    "exact": "今年秋天，河口湿地记录到的白鹭比去年多了三成。\n\n白鹭在浅滩觅食（林晓雨 摄）\n\n观察站的志愿者每周巡护两次，记下鸟的种类和数量。\n\n明年春天，观察站打算在上游再设两个点位。",
+    "images": {
+      "count": 2,
+      "list": [
+        {
+          "url": "https://mmbiz.qpic.cn/mmbiz_jpg/Example01/640?wx_fmt=jpeg",
+          "paragraph": 1
+        },
+        {
+          "url": "https://mmbiz.qpic.cn/mmbiz_png/Example02/640?wx_fmt=png",
+          "paragraph": 3
+        }
+      ]
+    },
+    "excludes": [
+      "隐藏的一句",
+      "微信扫一扫"
+    ]
+  },
+  "full": {
+    "contains": [
+      "今年秋天，河口湿地记录到的白鹭比去年多了三成。",
+      "明年春天，观察站打算在上游再设两个点位。"
+    ],
+    "excludes": [
+      "隐藏的一句"
+    ]
+  }
+}

@@ -144,6 +144,12 @@ fn tool_error(e: Error) -> ToolError {
             };
             ToolError::new("http_status", e.to_string(), hint, retry)
         }
+        Error::BotCheck { .. } => ToolError::new(
+            "bot_check",
+            e.to_string(),
+            "网站挡了程序：可以用 web_fetch 加 via: tavily（花 Tavily 点数）再取；不行就告诉用户这一页要在浏览器里打开。",
+            false,
+        ),
         other => ToolError::of(other.kind()),
     }
 }

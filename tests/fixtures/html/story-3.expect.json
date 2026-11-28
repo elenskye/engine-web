@@ -1,0 +1,23 @@
+{
+  "about": "分三页的文章第 3 页：<link rel=\"next\"> 和分页栏都指向下一页（_N.html，页号加一），导航里的「五号线换乘指南」不算；最后一页没有下一页。懒加载的图（data-src，src 是 1×1 的占位图）记网址、图注和在哪一段后面",
+  "url": "https://news.example.com/city/2026/metro-history_3.html",
+  "kind": "html",
+  "title": "示例市地铁四十年",
+  "rule": null,
+  "next_page": null,
+  "article": {
+    "images": {
+      "count": 1,
+      "list": [
+        {
+          "url": "https://news.example.com/img/2026/metro-2026.jpg",
+          "caption": "五号线南延段的新车站",
+          "paragraph": 3
+        }
+      ]
+    },
+    "excludes": [
+      "相关阅读"
+    ]
+  }
+}

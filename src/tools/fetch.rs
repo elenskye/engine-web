@@ -1,7 +1,7 @@
 //! `web_fetch`：网址 → 正文。默认本机抓（免费）；`via: tavily` 改用 Tavily 取页（计费）；`via: auto` 先本机，
-//! 取不到正文、被网站挡了、连不上时，App 给了 Tavily 密钥就改用 Tavily。PDF、图片这类原件作附件交回。
+//! 取不到正文、被网站挡了（含挡程序的验证页）、连不上时，App 给了 Tavily 密钥就改用 Tavily。PDF、图片这类原件作附件交回。
 
-use super::extract::{article_of, mode_of, render};
+use super::extract::{article_of, follow_pages, mode_of, page_lines, render, stopped_json};
 use super::{Web, tavily_key, tool_error, usage};
 use crate::tavily::{self, Client, Depth};
 use crate::{Error, Mode, check_url, fetch, sniff};
@@ -70,9 +70,14 @@ impl Miss {
     }
 
     fn tool(error: ToolError) -> Self {
+        let why = if error.kind == "bot_check" {
+            error.message.clone()
+        } else {
+            "这个网页里没读到正文。".into()
+        };
         Self {
-            fallback: error.kind == "no_article",
-            why: "这个网页里没读到正文。".into(),
+            fallback: matches!(error.kind.as_str(), "no_article" | "bot_check"),
+            why,
             error,
         }
     }
@@ -114,6 +119,9 @@ fn local(web: &Web, url: &str, mode: Mode, args: &Value, ctx: &Ctx<'_>) -> Resul
     }
     let article = article_of(&got.bytes, got.content_type.as_deref(), &got.url, mode)
         .map_err(|e| Miss::tool(fill_no_article(e)))?;
+    // 有下一页就接着抓、合成一篇（只有取消算错）
+    let pages = follow_pages(web, article, &got.url, mode, args, ctx).map_err(Miss::tool)?;
+    let article = pages.article;
     let mut head = vec![format!("网址：{}", got.url)];
     if !got.redirects.is_empty() {
         head.push(format!("跳转：{} → {}", got.redirects.join(" → "), got.url));
@@ -124,9 +132,14 @@ fn local(web: &Web, url: &str, mode: Mode, args: &Value, ctx: &Ctx<'_>) -> Resul
             size(web.fetch.max_bytes.min(crate::LIMITS.max_bytes) as usize)
         ));
     }
-    let more = json!({
+    head.extend(page_lines(&article, pages.stopped.as_ref()));
+    let mut more = json!({
         "via": "local", "status": got.status, "redirects": got.redirects, "body_truncated": got.truncated,
     });
+    let stopped = stopped_json(pages.stopped.as_ref());
+    if !stopped.is_null() {
+        more["stopped"] = stopped;
+    }
     render(&article, Some(&got.url), head, mode, args, more).map_err(Miss::tool)
 }
 

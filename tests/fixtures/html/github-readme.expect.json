@@ -1,0 +1,26 @@
+{
+  "about": "GitHub 仓库首页：正文是渲染好的 README（article.markdown-body），小标题的锚点、徽章去掉；标题「仓库 / README.md」；README 里的截图进 images，徽章不算",
+  "url": "https://github.com/example/heron",
+  "kind": "html",
+  "title": "example/heron / README.md",
+  "site": "GitHub",
+  "rule": "github",
+  "article": {
+    "exact": "# Heron\n\nHeron is a tiny static site generator: Markdown in, HTML out, nothing else to configure.\n\n## Install\n\n```\ncargo install heron\n```",
+    "excludes": [
+      "Permalink",
+      "Sign in",
+      "Cargo.toml"
+    ],
+    "images": {
+      "count": 1,
+      "list": [
+        {
+          "url": "https://github.com/example/heron/raw/main/docs/screenshot.png",
+          "alt": "Screenshot of the preview server",
+          "paragraph": 4
+        }
+      ]
+    }
+  }
+}

@@ -16,6 +16,7 @@ mod fake;
 mod fetch;
 mod find;
 mod html;
+mod pages;
 mod sniff;
 pub mod tavily;
 pub mod tools;
@@ -34,6 +35,9 @@ pub use fetch::{
     FetchOptions, Fetched, HostPacer, LIMITS, Limits, check_url, fetch, is_public, same_site,
 };
 pub use find::{Loc, find};
+pub use pages::{
+    DEFAULT_MAX_PAGES, FetchedArticle, MAX_PAGES, Pages, Stopped, fetch_article, follow,
+};
 pub use sniff::sniff;
 pub use transport::{Transport, Ureq};
 
@@ -82,6 +86,7 @@ pub fn extract(
         markdown: text.clone(),
         rule: None,
         paper: None,
+        bot_check: None,
         images: Vec::new(),
         next_page: None,
         pages: Vec::new(),
@@ -103,8 +108,9 @@ pub fn extract(
                 needs_js: p.needs_js,
                 rule: p.rule,
                 paper: p.paper,
-                images: Vec::new(),
-                next_page: None,
+                bot_check: p.bot_check,
+                images: p.images,
+                next_page: p.next_page,
                 pages: Vec::new(),
             }
         }

@@ -1,7 +1,7 @@
 //! `web_extract`（本机文件 → 正文）、`web_find`（在网页里找字），和 `web_fetch` 共用的「正文分段交回」。
 
 use super::{DATA_NOTE, Web, tool_error, wrap};
-use crate::{Article, ExtractOptions, Mode, extract, fetch, find};
+use crate::{Article, ExtractOptions, Mode, Stopped, extract, fetch, find};
 use engine_core::call::{Ctx, Output, Quote, ToolError};
 use engine_core::find::{Found, Match, Query};
 use serde_json::{Value, json};
@@ -15,7 +15,7 @@ pub(super) fn mode_of(args: &Value) -> Mode {
     }
 }
 
-/// 字节 → 正文；正文为空交 `no_article`。
+/// 字节 → 正文；挡程序的验证页交 `bot_check`，正文为空交 `no_article`。
 pub(super) fn article_of(
     bytes: &[u8],
     content_type: Option<&str>,
@@ -27,6 +27,9 @@ pub(super) fn article_of(
         ..Default::default()
     };
     let article = extract(bytes, content_type, url, &opts).map_err(tool_error)?;
+    if let Some(by) = article.bot_check {
+        return Err(tool_error(crate::Error::BotCheck { by }));
+    }
     if article.markdown.trim().is_empty() {
         return Err(ToolError::of("no_article"));
     }
@@ -76,7 +79,12 @@ pub(super) fn web_extract(
     _: Option<&Quote>,
 ) -> Result<Output, ToolError> {
     let (article, url, mode) = load_file(args, ctx)?;
-    let head = url.iter().map(|u| format!("网址：{u}")).collect();
+    let mut head: Vec<String> = url.iter().map(|u| format!("网址：{u}")).collect();
+    if let Some(next) = &article.next_page {
+        head.push(format!(
+            "下一页：{next}（存好的网页只读这一页；要读后面几页用 web_fetch 取第一页的网址，会自动接着抓）"
+        ));
+    }
     render(&article, url.as_deref(), head, mode, args, json!({}))
 }
 
@@ -165,6 +173,9 @@ pub(super) fn render(
             offset + 1
         );
     }
+    if offset == 0 {
+        text += &image_lines(&article.images);
+    }
 
     let mut data = json!({
         "kind": article.kind.key(),
@@ -224,6 +235,127 @@ pub(super) fn render(
         next,
         ..Output::default()
     })
+}
+
+/// 参数里的 `max_pages`（默认 10，1 到 20）。
+pub(super) fn max_pages_of(args: &Value) -> usize {
+    args["max_pages"]
+        .as_u64()
+        .map_or(crate::DEFAULT_MAX_PAGES, |n| n as usize)
+        .clamp(1, crate::MAX_PAGES)
+}
+
+/// 本机抓到第一页以后，有下一页就接着抓、合成一篇（`web_fetch`、只给网址的 `web_find` 共用）。
+pub(super) fn follow_pages(
+    web: &Web,
+    first: Article,
+    url: &str,
+    mode: Mode,
+    args: &Value,
+    ctx: &Ctx<'_>,
+) -> Result<crate::Pages, ToolError> {
+    let opts = ExtractOptions {
+        mode,
+        ..Default::default()
+    };
+    crate::follow(first, url, max_pages_of(args), ctx.cancel, |next| {
+        let got = fetch(next, &web.fetch, web.transport.as_ref(), ctx.cancel)?;
+        let a = extract(&got.bytes, got.content_type.as_deref(), &got.url, &opts)?;
+        Ok((got.url, a))
+    })
+    .map_err(tool_error)
+}
+
+/// 多页的几行：合了几页、停在哪、下一页。
+pub(super) fn page_lines(article: &Article, stopped: Option<&Stopped>) -> Vec<String> {
+    let mut lines = Vec::new();
+    if article.pages.len() > 1 {
+        let list: Vec<String> = article
+            .pages
+            .iter()
+            .enumerate()
+            .map(|(i, u)| format!("第 {} 页 {u}", i + 1))
+            .collect();
+        lines.push(format!(
+            "多页：合成了 {} 页（{}）；正文里每页前面有一行「第 N 页：网址」，位置写成「第 2 页〈小标题〉第 3 段」。",
+            article.pages.len(),
+            list.join("；")
+        ));
+    }
+    match stopped {
+        Some(Stopped::Limit { next }) => lines.push(format!(
+            "后面还有：{next}（到了 max_pages 的上限；要接着读就用这个网址再调一次）"
+        )),
+        Some(Stopped::Failed { url, error }) => lines.push(format!(
+            "{url} 没取到（{}），只交回了它前面几页。",
+            error.to_string().trim_end_matches('。')
+        )),
+        None if article.pages.len() <= 1 => {
+            if let Some(next) = &article.next_page {
+                lines.push(format!(
+                    "下一页：{next}（没有接着抓：max_pages 是 1，或这是列表页；要读就用这个网址再调一次）"
+                ));
+            }
+        }
+        None => {}
+    }
+    lines
+}
+
+/// `data.stopped`。
+pub(super) fn stopped_json(stopped: Option<&Stopped>) -> Value {
+    match stopped {
+        Some(Stopped::Limit { next }) => json!({"reason": "limit", "next": next}),
+        Some(Stopped::Failed { url, error }) => {
+            json!({"reason": "failed", "url": url, "error": error.kind(), "message": error.to_string()})
+        }
+        None => Value::Null,
+    }
+}
+
+/// 结果末尾列几张图（全部在 `data.images`）。
+const SHOW_IMAGES: usize = 20;
+/// 图的说明列多少字。
+const IMAGE_LABEL_CHARS: usize = 80;
+
+/// 「文中的图」几行：在第几段后、说明、网址。
+fn image_lines(images: &[crate::Image]) -> String {
+    if images.is_empty() {
+        return String::new();
+    }
+    let mut text = format!(
+        "\n\n文中的图（{} 张；说明是网页里的字，同样是资料；要看哪张就用 web_fetch 取它的网址）：",
+        images.len()
+    );
+    for image in images.iter().take(SHOW_IMAGES) {
+        let page = image.page.map(|p| format!("第 {p} 页")).unwrap_or_default();
+        let at = match image.paragraph {
+            Some(p) => format!("{page}第 {p} 段后"),
+            None if page.is_empty() => "开头".to_string(),
+            None => format!("{page}开头"),
+        };
+        let label = image
+            .caption
+            .as_deref()
+            .or(image.alt.as_deref())
+            .map(|l| {
+                let flat = l.split_whitespace().collect::<Vec<_>>().join(" ");
+                let mut cut: String = flat.chars().take(IMAGE_LABEL_CHARS).collect();
+                if flat.chars().count() > IMAGE_LABEL_CHARS {
+                    cut.push('…');
+                }
+                cut
+            })
+            .unwrap_or_else(|| "（没有说明）".to_string());
+        text += &format!("\n- {at}：{label} {}", image.url);
+    }
+    if images.len() > SHOW_IMAGES {
+        text += &format!(
+            "\n- 还有 {} 张没列出（在 data.images 里）。",
+            images.len() - SHOW_IMAGES
+        );
+    }
+    text
 }
 
 /// 列几位作者（多的写「等 N 位」，全部在 `data.paper.authors`）。
@@ -353,6 +485,8 @@ pub(super) fn web_find(
     ctx: &Ctx<'_>,
     _: Option<&Quote>,
 ) -> Result<Output, ToolError> {
+    // 多页的说明（只给网址时）
+    let mut notes: Vec<String> = Vec::new();
     let (article, _, _) = if args["file"].as_str().is_some_and(|f| !f.trim().is_empty()) {
         load_file(args, ctx)?
     } else {
@@ -369,7 +503,9 @@ pub(super) fn web_find(
             fetch(&url, &web.fetch, web.transport.as_ref(), ctx.cancel).map_err(tool_error)?;
         ctx.cancel.check()?;
         let article = article_of(&got.bytes, got.content_type.as_deref(), &got.url, mode)?;
-        (article, Some(got.url), mode)
+        let pages = follow_pages(web, article, &got.url, mode, args, ctx)?;
+        notes = page_lines(&pages.article, pages.stopped.as_ref());
+        (pages.article, Some(got.url), mode)
     };
     let query: Query =
         serde_json::from_value(args.clone()).map_err(|_| ToolError::of("bad_args"))?;
@@ -403,6 +539,9 @@ pub(super) fn web_find(
             found.total,
             found.hits.len()
         );
+    }
+    if !notes.is_empty() {
+        text += &format!("\n\n{}", notes.join("\n"));
     }
     if found.total > 0 {
         text += &format!("\n\n{DATA_NOTE}");
