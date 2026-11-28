@@ -174,6 +174,21 @@ pub(super) fn render(
     if let Some(u) = url {
         data["url"] = json!(u);
     }
+    if let Some(rule) = article.rule {
+        data["rule"] = json!(rule);
+    }
+    if let Some(paper) = &article.paper {
+        data["paper"] = json!(paper);
+    }
+    if !article.images.is_empty() {
+        data["images"] = json!(article.images);
+    }
+    if let Some(next) = &article.next_page {
+        data["next_page"] = json!(next);
+    }
+    if !article.pages.is_empty() {
+        data["pages"] = json!(article.pages);
+    }
     if let Value::Object(more) = more {
         for (k, v) in more {
             data[k] = v;

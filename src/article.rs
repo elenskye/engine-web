@@ -79,6 +79,68 @@ pub struct Article {
     pub links: Vec<Link>,
     /// 正文很短而脚本很多：内容可能要开 JavaScript 才出来。
     pub needs_js: bool,
+    /// 用上的站点规则（`arxiv`、`plos`……，见 `docs/decisions/0008`）；没有就是通用做法。
+    pub rule: Option<&'static str>,
+    /// 文献信息：网页里有学术元数据（`citation_*`、PRISM、Dublin Core）或站点规则认得出时才有。
+    pub paper: Option<Paper>,
+    /// 正文里的图（网址、说明、在哪一段）。
+    pub images: Vec<Image>,
+    /// 这一页里找到的「下一页」（同一篇文章的下一页，不是下一篇）。
+    pub next_page: Option<String>,
+    /// 合并了几页时每页的网址（第 1 页在前）；没合并时是空的。
+    pub pages: Vec<String>,
+}
+
+/// 文献信息。字段照网页里写的原样（去掉多余空白），没写的就空着；不猜、不补。
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct Paper {
+    pub title: Option<String>,
+    pub authors: Vec<Author>,
+    #[serde(rename = "abstract")]
+    pub abstract_text: Option<String>,
+    pub keywords: Vec<String>,
+    /// 刊名、会议名，或工作论文的系列（NBER、BIS……）。
+    pub journal: Option<String>,
+    pub publisher: Option<String>,
+    pub volume: Option<String>,
+    pub issue: Option<String>,
+    /// 页码：「583–589」，只有起始页时是起始页（PLOS 的 `e0363891`）。
+    pub pages: Option<String>,
+    /// 报告号（工作论文的编号，如 `w36037`）。
+    pub number: Option<String>,
+    /// 发表日期，网页里写的原样。
+    pub published: Option<String>,
+    /// DOI，去掉了 `doi:`、`https://doi.org/` 前缀。
+    pub doi: Option<String>,
+    pub pdf_url: Option<String>,
+    /// 别的编号：`arxiv`、`pmid`、`pmcid`、`issn`、`isbn`。
+    pub ids: Vec<PaperId>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct Author {
+    pub name: String,
+    /// 机构，照网页的顺序。
+    pub affiliations: Vec<String>,
+    pub orcid: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct PaperId {
+    pub scheme: &'static str,
+    pub value: String,
+}
+
+/// 正文里的一张图。
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct Image {
+    /// 绝对网址（懒加载的取真正的那张，`srcset` 取最大的）。
+    pub url: String,
+    pub alt: Option<String>,
+    /// 图注（`figcaption` 这类）。
+    pub caption: Option<String>,
+    /// 在第几段（图前面最近的一段）；在正文最前面时是 `None`。
+    pub paragraph: Option<u32>,
 }
 
 /// 一段。段号全文连续、从 1 数起，小标题也算一段。

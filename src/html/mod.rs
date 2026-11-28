@@ -10,6 +10,7 @@ mod clean;
 mod full;
 mod markdown;
 mod meta;
+mod sites;
 
 use crate::blocks;
 use crate::{Block, ExtractOptions, Link, Mode};
@@ -29,6 +30,9 @@ pub(crate) struct Parts {
     pub blocks: Vec<Block>,
     pub links: Vec<Link>,
     pub needs_js: bool,
+    /// 用上的站点规则。
+    pub rule: Option<&'static str>,
+    pub paper: Option<crate::Paper>,
 }
 
 /// 不读的元素（Pith 的 `SKIP`）：`full` 模式走树、`<pre>` 取字时跳过。
@@ -86,10 +90,16 @@ const JS_SCRIPTS: usize = 5;
 const JS_EMPTY_CHARS: usize = 20;
 
 pub(crate) fn extract(html: &str, base: Option<&Url>, opts: &ExtractOptions) -> Parts {
-    match opts.mode {
-        Mode::Article => article(html, base, opts.min_article_chars),
+    // 站点规则（decisions/0008）：两种模式都先做 `fix`，article 模式再选正文的根
+    let site = sites::detect(base);
+    let fixed = site.and_then(|s| sites::fix(s, html));
+    let html = fixed.as_deref().unwrap_or(html);
+    let mut parts = match opts.mode {
+        Mode::Article => article(html, base, opts.min_article_chars, site),
         Mode::Full => full::extract(html, base),
-    }
+    };
+    parts.rule = site.map(|s| s.key);
+    parts
 }
 
 fn readability_config() -> dom_smoothie::Config {
@@ -99,8 +109,13 @@ fn readability_config() -> dom_smoothie::Config {
     }
 }
 
-fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
+fn article(html: &str, base: Option<&Url>, min_chars: usize, site: Option<&sites::Site>) -> Parts {
     let cleaned = clean::prepare(html);
+    let cleaned = match site.and_then(|s| sites::narrow(s, &cleaned)) {
+        Some(sites::Narrowed::Root(fragment)) => return from_root(html, &cleaned, &fragment, base),
+        Some(sites::Narrowed::Page(page)) => page,
+        None => cleaned,
+    };
     let base_str = base.map(Url::as_str);
     let parsed =
         dom_smoothie::Readability::new(cleaned.as_str(), base_str, Some(readability_config()))
@@ -143,6 +158,21 @@ fn article(html: &str, base: Option<&Url>, min_chars: usize) -> Parts {
         None => meta::Meta::read(html, base_str),
     };
     let title = meta::title_of(&meta.title, meta.site.as_deref(), &doc);
+    let blocks = blocks::number(blocks::from_markdown(&markdown), title.as_deref());
+    let needs_js = needs_js(&markdown, html);
+    meta.into_parts(title, markdown, blocks, links, needs_js)
+}
+
+/// 站点规则选出了正文的根：直接转 Markdown（不再过 Readability），元数据照通用做法读。
+fn from_root(html: &str, cleaned: &str, fragment: &str, base: Option<&Url>) -> Parts {
+    let doc = Document::from(fragment);
+    let body = doc.select("body");
+    let root = body.nodes().first().cloned().unwrap_or_else(|| doc.root());
+    let text = root.md(Some(BODY_SKIP)).to_string();
+    let links = links_in(&root, base, BODY_SKIP);
+    let markdown = markdown::tidy(&text, base);
+    let meta = meta::Meta::read(html, base.map(Url::as_str));
+    let title = meta::title_of(&meta.title, meta.site.as_deref(), &Document::from(cleaned));
     let blocks = blocks::number(blocks::from_markdown(&markdown), title.as_deref());
     let needs_js = needs_js(&markdown, html);
     meta.into_parts(title, markdown, blocks, links, needs_js)

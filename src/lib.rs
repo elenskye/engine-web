@@ -21,7 +21,9 @@ pub mod tavily;
 pub mod tools;
 pub mod transport;
 
-pub use article::{Article, Block, BlockKind, ExtractOptions, Kind, Link, Mode};
+pub use article::{
+    Article, Author, Block, BlockKind, ExtractOptions, Image, Kind, Link, Mode, Paper, PaperId,
+};
 pub use decode::decode;
 /// 钉的 engine-core（`Query`、`Found`、`Toolkit`、`Ctx`……），App 用同一份。
 pub use engine_core;
@@ -78,6 +80,11 @@ pub fn extract(
         links,
         needs_js: false,
         markdown: text.clone(),
+        rule: None,
+        paper: None,
+        images: Vec::new(),
+        next_page: None,
+        pages: Vec::new(),
     };
     Ok(match kind {
         Kind::Html => {
@@ -94,6 +101,11 @@ pub fn extract(
                 blocks: p.blocks,
                 links: p.links,
                 needs_js: p.needs_js,
+                rule: p.rule,
+                paper: p.paper,
+                images: Vec::new(),
+                next_page: None,
+                pages: Vec::new(),
             }
         }
         // Markdown 原样交回；标题是 YAML 头里的 title，没有就是第一个一级标题；分段跳过 YAML 头

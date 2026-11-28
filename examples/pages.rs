@@ -172,6 +172,28 @@ fn write(out: &Path, name: &str, suffix: &str, a: &Article, url: &str) {
     if let Some(t) = &a.title {
         text.push_str(&format!("<!-- 标题：{t} -->\n"));
     }
+    if let Some(rule) = a.rule {
+        text.push_str(&format!("<!-- 规则：{rule} -->\n"));
+    }
+    if let Some(p) = &a.paper {
+        let authors: Vec<&str> = p.authors.iter().map(|a| a.name.as_str()).collect();
+        text.push_str(&format!(
+            "<!-- 文献：{} · 作者 {} 位（{}） · {} · DOI {} · 日期 {} · PDF {} · 关键词 {} · 摘要 {} 字 -->\n",
+            p.title.as_deref().unwrap_or("（无标题）"),
+            authors.len(),
+            clip(&authors.join("; "), 80),
+            [&p.journal, &p.volume, &p.issue, &p.pages, &p.number]
+                .iter()
+                .filter_map(|v| v.as_deref())
+                .collect::<Vec<_>>()
+                .join(" / "),
+            p.doi.as_deref().unwrap_or("—"),
+            p.published.as_deref().unwrap_or("—"),
+            p.pdf_url.as_deref().unwrap_or("—"),
+            p.keywords.join("; "),
+            p.abstract_text.as_deref().map_or(0, |t| t.chars().count()),
+        ));
+    }
     text.push('\n');
     text.push_str(&a.markdown);
     text.push_str("\n\n<!-- 分段 -->\n");

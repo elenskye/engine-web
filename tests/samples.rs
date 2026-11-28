@@ -167,6 +167,22 @@ fn check(tag: &str, a: &Article, expect: &Value, mode: &Value, failures: &mut Ve
             fail(format!("needs_js 应为 {js}"));
         }
     }
+    if let Some(rule) = expect.get("rule") {
+        if a.rule != rule.as_str() {
+            fail(format!("rule 应为 {rule}，实际 {:?}", a.rule));
+        }
+    }
+    if let Some(next) = expect.get("next_page") {
+        if a.next_page.as_deref() != next.as_str() {
+            fail(format!("next_page 应为 {next}，实际 {:?}", a.next_page));
+        }
+    }
+    if let Some(want) = expect.get("paper") {
+        check_paper(a.paper.as_ref(), want, &mut fail);
+    }
+    if let Some(want) = expect.get("images") {
+        check_images(&a.images, want, &mut fail);
+    }
     for want in strs(&mode["contains"]) {
         if !a.markdown.contains(want) {
             fail(format!("正文里没有 {want:?}"));
@@ -231,5 +247,109 @@ fn check(tag: &str, a: &Article, expect: &Value, mode: &Value, failures: &mut Ve
     }
     if a.markdown.trim().is_empty() != a.blocks.is_empty() {
         fail("正文和分段一个空一个不空".into());
+    }
+}
+
+/// `paper`：`null` 就要没有；对象里写了哪项查哪项（`authors`、`keywords` 逐个相等，`affiliations` 要出现在某位作者的机构里，
+/// `abstract` 是摘要里要有的一句，`ids` 是 `{编号种类: 值}`）。
+fn check_paper(got: Option<&engine_web::Paper>, want: &Value, fail: &mut impl FnMut(String)) {
+    let Some(want) = want.as_object() else {
+        if got.is_some() {
+            fail(format!("不该有 paper，实际 {got:?}"));
+        }
+        return;
+    };
+    let Some(p) = got else {
+        fail("应当有 paper".into());
+        return;
+    };
+    for (field, value) in [
+        ("title", &p.title),
+        ("journal", &p.journal),
+        ("publisher", &p.publisher),
+        ("volume", &p.volume),
+        ("issue", &p.issue),
+        ("pages", &p.pages),
+        ("number", &p.number),
+        ("published", &p.published),
+        ("doi", &p.doi),
+        ("pdf_url", &p.pdf_url),
+    ] {
+        if let Some(w) = want.get(field) {
+            if value.as_deref() != w.as_str() {
+                fail(format!("paper.{field} 应为 {w}，实际 {value:?}"));
+            }
+        }
+    }
+    if let Some(w) = want.get("authors") {
+        let names: Vec<&str> = p.authors.iter().map(|a| a.name.as_str()).collect();
+        if names != strs(w) {
+            fail(format!("paper.authors 应为 {:?}，实际 {names:?}", strs(w)));
+        }
+    }
+    for aff in strs(&want.get("affiliations").cloned().unwrap_or_default()) {
+        if !p
+            .authors
+            .iter()
+            .any(|a| a.affiliations.iter().any(|x| x == aff))
+        {
+            fail(format!("没有哪位作者的机构是 {aff:?}"));
+        }
+    }
+    if let Some(w) = want.get("keywords") {
+        if p.keywords.iter().map(String::as_str).collect::<Vec<_>>() != strs(w) {
+            fail(format!(
+                "paper.keywords 应为 {:?}，实际 {:?}",
+                strs(w),
+                p.keywords
+            ));
+        }
+    }
+    if let Some(w) = want.get("abstract").and_then(Value::as_str) {
+        if !p.abstract_text.as_deref().is_some_and(|a| a.contains(w)) {
+            fail(format!("摘要里没有 {w:?}，实际 {:?}", p.abstract_text));
+        }
+    }
+    if let Some(ids) = want.get("ids").and_then(Value::as_object) {
+        for (scheme, value) in ids {
+            if !p
+                .ids
+                .iter()
+                .any(|i| i.scheme == scheme && Some(i.value.as_str()) == value.as_str())
+            {
+                fail(format!(
+                    "paper.ids 里没有 {scheme}={value}，实际 {:?}",
+                    p.ids
+                ));
+            }
+        }
+    }
+}
+
+/// `images`：数组里每一项都要在 `images` 里找得到（写了哪项比哪项）；`{"count": n}` 只比张数。
+fn check_images(got: &[engine_web::Image], want: &Value, fail: &mut impl FnMut(String)) {
+    if let Some(n) = want.get("count").and_then(Value::as_u64) {
+        if got.len() as u64 != n {
+            fail(format!("应当有 {n} 张图，实际 {}", got.len()));
+        }
+    }
+    for w in want
+        .get("list")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let ok = got.iter().any(|i| {
+            w.get("url")
+                .is_none_or(|u| u.as_str() == Some(i.url.as_str()))
+                && w.get("alt").is_none_or(|v| v.as_str() == i.alt.as_deref())
+                && w.get("caption")
+                    .is_none_or(|v| v.as_str() == i.caption.as_deref())
+                && w.get("paragraph")
+                    .is_none_or(|v| v.as_u64() == i.paragraph.map(u64::from))
+        });
+        if !ok {
+            fail(format!("images 里没有 {w}，实际 {got:?}"));
+        }
     }
 }

@@ -58,6 +58,8 @@ impl Meta {
             blocks,
             links,
             needs_js,
+            rule: None,
+            paper: None,
         }
     }
 }
