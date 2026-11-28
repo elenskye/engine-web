@@ -36,7 +36,7 @@ v0.3.0 能用了：取正文、抓取（`fetch`）、Tavily（搜索、取页、
 ## 等站主
 
 1. **看 v0.4.0 的 Phase 计划**（`ROADMAP.md`「v0.4.0」），没问题就说「开工」。
-2. **push**（在 `engine-web` 目录、总仓库目录各一次，这一轮只有文档）：
+2. **push**（在 `engine-web` 目录；这一轮只有文档。总仓库没有远端，不用推）：
 
    ```bash
    git push origin main
