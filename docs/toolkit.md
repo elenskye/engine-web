@@ -108,7 +108,7 @@ let output = toolkit.run(prepared, &ctx)?;
 - 改说明，比如 Peck 用英文说明；
 - 改默认值：`mode`、`max_chars`、`max_hits`、`context`、`via`（想默认先本机、不行再 Tavily 就改成 `auto`）、`depth`、`max_results`、`limit`；
 - 收紧上限：`max_chars`、`max_results`、`limit`、`max_depth` 的 `maximum`，数组的 `maxItems`；
-- 改确认方式（比如 `web_search` 超过 $0.02 才问，`web_crawl` 不问）；
+- 改确认方式（比如 `web_search` 超过 $0.02 就问）：花钱的门槛只能改严，不能放宽（`CLAUDE.md`「五」「花钱的规矩」）；
 - 关掉不用的工具（`disabled`）。
 
 结果的格式不改，要别的样子在 App 里转。

@@ -12,7 +12,7 @@
 | v0.2.0 | **取正文**：字节 → Markdown 正文（表格、链接、代码块不丢）、标题作者日期站名、编码识别、类型判断、「可能要开 JavaScript」提示、`article` / `full` 两种模式；`web_extract`、`web_find`；工具包和命令行 | 云端为主 | **已发**（2026-11-27） |
 | v0.3.0 | **抓取和搜索**：`web_fetch`（跳转、超时、大小上限、内网检查、解压 gzip / br）；Tavily 的搜索、取页、爬站、站内地图（`web_search`、`web_crawl`、`web_map`）；报价和 `Usage`；模拟服务 | 本机（站主 2026-11-27 定） | **已发**（2026-11-27） |
 | v0.4.0 | **站点规则、图、多页**：文献页（arXiv、期刊、工作论文和智库）、维基百科、GitHub 的 README 和 issue、微信公众号文章；文章里的图；多页文章自动合并（原 v0.5） | 本机（站主 2026-11-28 定） | 在做：Phase 1–2 完成 |
-| v0.5.0 | 接 Peck：`harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily（原 v0.4） | 本机（Peck 仓库） | 大纲 |
+| v0.5.0 | 接 Peck：`harness/tools/web.rs` 的抓取和取正文、`gateway/search.rs` 的 Tavily（原 v0.4）；接之前 Tavily 的确认和记账换成 engine-core 的花钱规矩（`CLAUDE.md`「五」） | 本机（Peck 仓库） | 大纲 |
 | v0.6.0 | 接 Pomelo：`youzi/files.rs::fetch_page`、`youzi/office.rs::web_article`、`youzi/skills/web.rs`、`pub2md/search.rs` | 本机（Pomelo 仓库） | 大纲 |
 | v0.7.0 | 接 Pith：`research/download.rs` 的抓取、`research/content.rs` 的网页取字、`research/tavily.rs` | 本机（Pith 仓库） | 大纲 |
 | v1.0.0 | 完成体：冻结接口和工具清单，三家钉 v1.0.0，全量回归 | 本机 | 大纲 |

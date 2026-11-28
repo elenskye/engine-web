@@ -2,6 +2,8 @@
 
 更新：2026-11-28 · **v0.4.0 Phase 1、2 完成**（没打 tag，版本号还是 0.3.0）· 本机 Claude Code
 
+> 准则更新（2026-11-28）：`CLAUDE.md`「五」的「花钱的调用」换成「花钱的规矩」：一次超过 $0.5 或算不出、Tavily 24 小时合计（所有 App 一起）超过 $5 才问站主，否则直接调；引擎算、引擎记共用账本，App 从引擎取（总仓库 `docs/decisions/0011`）。「三」加了「引擎带的大文件」（App 用 `cp -c` 放一份 APFS 克隆，`0012`），本引擎现在没有。Tavily 的代码 v0.5.0 接 Peck 前改（`ROADMAP.md`）。
+
 ## 现在在哪
 
 v0.3.0 已发（取正文、抓取、Tavily，六个工具）。v0.4.0 在做：站点规则的框架、`Article` 的新字段、文献信息、arXiv / PLOS / AEA / Nature 四条规则做完了；维基百科、GitHub、公众号（Phase 3），图和多页（Phase 4），收尾发版（Phase 5）没做。计划和状态在 `ROADMAP.md`「v0.4.0」，做法在 `docs/decisions/0008`。
@@ -63,7 +65,7 @@ cargo run --release --example pages -- local/pages/sites --out local/out/sites
 
 ## 真跑
 
-密钥只在验收里用：从站主的密钥文件夹复制到会话临时目录里 600 权限的文件，用环境变量交给 `#[ignore]` 的测试。不打印、不写进文档、夹具、日志和错误信息。每版上限 $1（v0.4.0 计划不花）。
+密钥只在验收里用：从站主的密钥文件夹复制到会话临时目录里 600 权限的文件，用环境变量交给 `#[ignore]` 的测试。不打印、不写进文档、夹具、日志和错误信息。照 `CLAUDE.md`「五」「花钱的规矩」（v0.4.0 计划不花）。
 
 ```bash
 install -m 600 ~/Documents/Dataset/Pomelo/key/tavily <会话临时目录>/tavily.key
