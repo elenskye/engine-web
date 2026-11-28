@@ -102,6 +102,10 @@ impl Fake {
 }
 
 impl Transport for Fake {
+    fn simulated(&self) -> bool {
+        true
+    }
+
     fn resolve(&self, host: &str, _port: u16) -> Result<Vec<IpAddr>, Error> {
         match self.hosts.get(&host.to_ascii_lowercase()) {
             Some(ips) if ips.is_empty() => Err(Error::UnknownHost),

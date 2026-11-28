@@ -89,7 +89,7 @@ pub(super) fn web_search(
     let reply = client(web, &key)
         .search(&s, ctx.cancel)
         .map_err(tool_error)?;
-    let used = usage(reply.credits, quote, ctx);
+    let used = usage(web, reply.credits, quote, ctx);
     let mut text = if reply.value.is_empty() {
         "没有搜到。换个说法、少几个词，或去掉 domains、recency 再试。".to_string()
     } else {
@@ -183,7 +183,7 @@ pub(super) fn web_crawl(
     let reply = client(web, &key)
         .crawl(&c, ctx.cancel)
         .map_err(tool_error)?;
-    let used = usage(reply.credits, quote, ctx);
+    let used = usage(web, reply.credits, quote, ctx);
     let pages: Vec<_> = reply
         .value
         .iter()
@@ -232,7 +232,7 @@ pub(super) fn web_map(
     let c = crawl_of(args)?;
     let key = tavily_key(ctx)?;
     let reply = client(web, &key).map(&c, ctx.cancel).map_err(tool_error)?;
-    let used = usage(reply.credits, quote, ctx);
+    let used = usage(web, reply.credits, quote, ctx);
     let mut text = if reply.value.is_empty() {
         "没有找到网址。换个起点，或去掉 instructions 再试。".to_string()
     } else {

@@ -182,8 +182,8 @@ fn cli_lists_describes_and_calls() {
             {"name": "web_find", "title": "在网页里找字", "cost": {"kind": "local", "typical_ms": 50}, "confirm": {"kind": "never"}},
             {"name": "web_fetch", "title": "读一个网页", "cost": tavily, "confirm": {"kind": "never"}},
             {"name": "web_search", "title": "搜网页", "cost": tavily, "confirm": {"kind": "never"}},
-            {"name": "web_crawl", "title": "爬一个网站", "cost": tavily, "confirm": {"kind": "always"}},
-            {"name": "web_map", "title": "列出网站里的网址", "cost": tavily, "confirm": {"kind": "always"}}
+            {"name": "web_crawl", "title": "爬一个网站", "cost": tavily, "confirm": {"kind": "never"}},
+            {"name": "web_map", "title": "列出网站里的网址", "cost": tavily, "confirm": {"kind": "never"}}
         ])
     );
     let (code, spec, _) = cli(&["describe", "web_find"]);

@@ -144,6 +144,10 @@ pub trait Transport: Send + Sync {
     fn resolve(&self, host: &str, port: u16) -> Result<Vec<IpAddr>, Error>;
     /// 发一个请求，不跟跳转。连不上、超时交 [`Error::Network`]、[`Error::Timeout`]；HTTP 状态码不算错，照实交回。
     fn send(&self, req: &Request, cancel: &Cancel) -> Result<Response, Error>;
+    /// 模拟的服务（不花真钱，不记账）。默认不是。
+    fn simulated(&self) -> bool {
+        false
+    }
 }
 
 /// 默认的 [`Transport`]：ureq。每个请求新建一个连接（要钉地址），不留连接池。

@@ -14,6 +14,7 @@ mod search;
 use crate::transport::{Transport, Ureq};
 use crate::{Binary, Error, FetchOptions};
 use engine_core::call::{Ctx, Handler, Output, Quote, ToolError, Toolkit, Usage, Zeroizing};
+use engine_core::spend::{Book, Ledger};
 use engine_core::tool::ToolSpec;
 use serde_json::Value;
 use std::sync::{Arc, OnceLock};
@@ -36,6 +37,11 @@ pub struct Web {
     pub transport: Arc<dyn Transport>,
     /// Tavily 的网址，默认 [`crate::tavily::BASE`]。
     pub tavily_base: String,
+    /// 花钱的账本放在哪（engine-core `spend`）：默认所有 App 共用的；App 的开发版、测试用 `At(底)` 或 `Off`。
+    /// 工具包照它定要不要问，真花了钱（模拟的服务不算）记进 `<底>/engine-web/tavily-ledger.jsonl`。
+    pub ledger: Ledger,
+    /// 记进账本的 App 名字（Peck、Pith、Pomelo、命令行）。
+    pub app: String,
 }
 
 impl Default for Web {
@@ -51,7 +57,14 @@ impl Web {
             fetch: FetchOptions::default(),
             transport,
             tavily_base: crate::tavily::BASE.to_string(),
+            ledger: Ledger::Shared,
+            app: String::new(),
         }
+    }
+
+    /// Tavily 这一份账：问不问、记一笔、App 报告花了多少（`entries`）都用它。
+    pub fn book(&self) -> Book {
+        self.ledger.book("web", "tavily")
     }
 }
 
@@ -66,6 +79,7 @@ pub fn toolkit_with(web: Web) -> Toolkit<Web> {
         .iter()
         .map(|s| serde_json::from_str(s).expect("tools/*.json 是合法的清单"))
         .collect();
+    let ledger = web.ledger.clone();
     Toolkit::new(
         web,
         manifest,
@@ -91,6 +105,7 @@ pub fn toolkit_with(web: Web) -> Toolkit<Web> {
         ],
     )
     .expect("清单和实现一一对应")
+    .with_ledger(ledger)
 }
 
 /// 默认的工具清单。
@@ -184,7 +199,8 @@ fn tavily_key(ctx: &Ctx<'_>) -> Result<Zeroizing<String>, ToolError> {
 }
 
 /// 照 Tavily 报的点数记用量；回复里没有点数时按报价记，标「估算」。
-fn usage(credits: Option<f64>, quote: Option<&Quote>, ctx: &Ctx<'_>) -> Usage {
+/// 这次 Tavily 用了多少；真花了钱就记进账本（模拟的服务不记，记不上不挡结果）。
+fn usage(web: &Web, credits: Option<f64>, quote: Option<&Quote>, ctx: &Ctx<'_>) -> Usage {
     let price = ctx
         .prices
         .get("tavily", "credit")
@@ -193,13 +209,17 @@ fn usage(credits: Option<f64>, quote: Option<&Quote>, ctx: &Ctx<'_>) -> Usage {
         Some(c) => (c, false),
         None => (quote.map_or(0.0, |q| q.units), true),
     };
-    Usage {
+    let used = Usage {
         service: "tavily".into(),
         unit: "credit".into(),
         units,
         usd: units * price,
         estimated,
+    };
+    if !web.transport.simulated() {
+        let _ = web.book().record_usage(&web.app, &used);
     }
+    used
 }
 
 /// 把正文包进 `<web-page>`：正文里的 `</web-page>`（不分大小写）换掉，不让网页里的字假装结果结束了。

@@ -269,8 +269,7 @@ dependencies = [
 
 [[package]]
 name = "engine-core"
-version = "0.2.0"
-source = "git+https://github.com/elenskye/engine-core?tag=v0.2.0#bb56a483d4b797695faf346bdd5e8e492a3582a5"
+version = "0.4.0"
 dependencies = [
  "serde",
  "serde_json",

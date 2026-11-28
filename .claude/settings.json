@@ -4,5 +4,18 @@
     "commit": "",
     "pr": "",
     "sessionUrl": false
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/clean.sh\" --start --yes --quiet 2>/dev/null || true",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
   }
 }

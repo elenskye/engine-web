@@ -1,7 +1,7 @@
 {
   "name": "web_map",
   "title": "列出网站里的网址",
-  "description": "用 Tavily 从一个网址起列出同一个网站里的网址（不读正文），用来先看一个网站有哪些页、再挑几页用 web_fetch 读。花 Tavily 点数：每 10 个网址 1 点（写了 instructions 2 点），默认最多 50 个、约 5 点；每次先报价、要用户确认。max_depth 管从起点往下几层，instructions 用一句话说要哪些页。不出这个网站。",
+  "description": "用 Tavily 从一个网址起列出同一个网站里的网址（不读正文），用来先看一个网站有哪些页、再挑几页用 web_fetch 读。花 Tavily 点数：每 10 个网址 1 点（写了 instructions 2 点），默认最多 50 个、约 5 点；先报价；照花钱的规矩，一次超过 $0.5 或 Tavily 最近 24 小时合计超过 $5 才要用户确认。max_depth 管从起点往下几层，instructions 用一句话说要哪些页。不出这个网站。",
   "params": {
     "type": "object",
     "properties": {
@@ -61,7 +61,7 @@
     }
   ],
   "cost": {"kind": "metered", "service": "tavily", "unit": "credit", "usd_per_unit": 0.008},
-  "confirm": {"kind": "always"},
+  "confirm": {"kind": "never"},
   "effects": {"network": true, "writes": "none"},
   "note": "报价按 limit 算最坏情况：ceil(limit/10) × (instructions 2 : 1)；实际按 Tavily 回复里的点数记。",
   "examples": [

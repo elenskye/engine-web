@@ -169,19 +169,19 @@ fn quotes_and_confirmation_follow_the_manifest() {
     );
     assert_eq!(
         quote("web_crawl", json!({"url": "https://docs.example.org/"})),
-        (Some(3.0), true),
-        "默认 10 页"
+        (Some(3.0), false),
+        "默认 10 页，$0.024：照花钱的规矩不用问"
     );
     assert_eq!(
         quote(
             "web_crawl",
             json!({"url": "https://docs.example.org/", "limit": 50, "instructions": "只要安装", "extract_depth": "advanced"})
         ),
-        (Some(30.0), true)
+        (Some(30.0), false)
     );
     assert_eq!(
         quote("web_map", json!({"url": "https://docs.example.org/"})),
-        (Some(5.0), true)
+        (Some(5.0), false)
     );
     let p = tk
         .prepare(
@@ -436,8 +436,16 @@ fn fetch_hands_back_non_pages_as_attachments_and_pages_through_long_ones() {
 }
 
 #[test]
-fn cli_asks_for_yes_before_spending() {
-    let tk = toolkit(Arc::new(fake()));
+fn cli_asks_for_yes_only_by_the_spend_rule() {
+    use engine_web::engine_core::spend::{Entry, Ledger};
+    let dir = std::env::temp_dir().join(format!("engine-web-cli-spend-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let web = Web {
+        ledger: Ledger::At(dir.clone()),
+        ..Web::new(Arc::new(fake()))
+    };
+    let book = web.book();
+    let tk = tools::toolkit_with(web);
     let run = |args: &[&str]| {
         let (mut out, mut err) = (Vec::new(), Vec::new());
         let code = run_with(&tk, args, &mut out, &mut err);
@@ -446,21 +454,36 @@ fn cli_asks_for_yes_before_spending() {
             serde_json::from_slice::<Value>(&out).unwrap_or(Value::Null),
         )
     };
+    // $0.008：不用问，直接执行（命令行没有 Tavily 密钥，到了 auth；模拟的服务也不记账）
+    let (code, reply) = run(&["call", "web_search", r#"{"query":"q"}"#]);
+    assert_eq!((code, &reply["error"]["kind"]), (1, &json!("auth")));
+    // Tavily 最近 24 小时（所有 App）快到 $5：只报价、说为什么，退出码 3
+    book.record(&Entry {
+        at: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+        app: "Peck".into(),
+        service: "tavily".into(),
+        unit: "credit".into(),
+        units: 620.0,
+        usd: 4.99,
+        estimated: false,
+    })
+    .unwrap();
     let (code, reply) = run(&[
         "call",
         "web_crawl",
         r#"{"url":"https://docs.example.org/"}"#,
     ]);
-    assert_eq!(code, 3, "不加 --yes 只报价");
+    assert_eq!(code, 3, "要问时不加 --yes 只报价");
     assert_eq!(
         (&reply["quote"]["units"], &reply["quote"]["service"]),
         (&json!(3.0), &json!("tavily"))
     );
-    let (code, reply) = run(&["call", "web_search", r#"{"query":"q"}"#]);
-    assert_eq!(
-        (code, &reply["quote"]["units"]),
-        (3, &json!(1.0)),
-        "命令行对一切花钱的都要 --yes"
+    assert!(
+        reply["why"].as_str().unwrap().contains("最近 24 小时已花"),
+        "{reply}"
     );
     // 本机抓报价 0：不用 --yes
     let (code, reply) = run(&[
@@ -579,4 +602,72 @@ fn bot_check_pages_are_errors_and_auto_falls_back_to_tavily() {
         out.data["fallback_from"],
         "网站回的是挡程序的验证页（Cloudflare），不是正文。"
     );
+}
+
+/// 不是模拟的服务（转给 Fake 发，但不说自己是模拟的）：看真花了钱时记不记账。
+struct Real(Fake);
+
+impl engine_web::transport::Transport for Real {
+    fn resolve(&self, host: &str, port: u16) -> Result<Vec<std::net::IpAddr>, engine_web::Error> {
+        self.0.resolve(host, port)
+    }
+    fn send(
+        &self,
+        req: &engine_web::transport::Request,
+        cancel: &Cancel,
+    ) -> Result<Response, engine_web::Error> {
+        self.0.send(req, cancel)
+    }
+}
+
+#[test]
+fn real_tavily_calls_go_into_the_shared_ledger_and_simulated_ones_do_not() {
+    use engine_web::engine_core::spend::Ledger;
+    let dir = std::env::temp_dir().join(format!("engine-web-ledger-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let host = LocalHost::default();
+    let cancel = Cancel::new();
+    let ctx = with_keys(&host, &cancel, &KEY);
+    let real = Web {
+        ledger: Ledger::At(dir.clone()),
+        app: "Pomelo".into(),
+        ..Web::new(Arc::new(Real(fake())))
+    };
+    let book = real.book();
+    assert_eq!(
+        book.path().unwrap(),
+        dir.join("engine-web/tavily-ledger.jsonl")
+    );
+    tools::toolkit_with(real)
+        .call("web_search", &json!({"query": "q"}), &ctx)
+        .unwrap();
+    let entries = book.entries(std::time::UNIX_EPOCH);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(
+        (
+            entries[0].app.as_str(),
+            entries[0].service.as_str(),
+            entries[0].unit.as_str()
+        ),
+        ("Pomelo", "tavily", "credit")
+    );
+    assert!(entries[0].usd > 0.0);
+    // 本机抓不花钱：不记
+    let real = Web {
+        ledger: Ledger::At(dir.clone()),
+        ..Web::new(Arc::new(Real(fake())))
+    };
+    tools::toolkit_with(real)
+        .call("web_fetch", &json!({"url": ARTICLE}), &ctx)
+        .unwrap();
+    assert_eq!(book.entries(std::time::UNIX_EPOCH).len(), 1);
+    // 模拟的服务：不记
+    let simulated = Web {
+        ledger: Ledger::At(dir.clone()),
+        ..Web::new(Arc::new(fake()))
+    };
+    tools::toolkit_with(simulated)
+        .call("web_search", &json!({"query": "q"}), &ctx)
+        .unwrap();
+    assert_eq!(book.entries(std::time::UNIX_EPOCH).len(), 1);
 }

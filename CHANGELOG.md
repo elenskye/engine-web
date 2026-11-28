@@ -2,6 +2,16 @@
 
 每个发出去的版本（tag `v<版本>`）：公共接口和工具清单的变化、App 升级要改什么。
 
+## v0.4.0（开发中）
+
+站点规则、图、多页见 `ROADMAP.md`「v0.4.0」，发版时补全。另有花钱的规矩（2026-11-28）：
+
+- 钉 engine-core `v0.4.0`（tag 推上去之前指本机 `../engine-core`）。
+- `tools::Web` 多了 `ledger`（默认 `Ledger::Shared`）、`app` 和 `book()`；`toolkit_with` 用同一份账本定要不要问（engine-core `spend`：一次超过 $0.5、或 Tavily 最近 24 小时合计超过 $5）。真花了钱的 Tavily 调用记进 `<底>/engine-web/tavily-ledger.jsonl`。
+- `transport::Transport` 多了带默认的 `simulated()`；`Fake` 交 `true`，不记账。
+- `web_crawl`、`web_map` 的清单确认从 `always` 改成 `never`。命令行不用问的直接执行，记账名「命令行」。
+- **App 升级要改的**：用字面量建 `Web` 的补 `ledger`、`app`（或 `..Web::new(…)`）；开发版、测试设 `ledger: Ledger::At(底)` 或 `Off`；要先弹卡片的用 `prepare` 的 `needs_confirm()`、`why()`。
+
 ## v0.3.0（2026-11-27）
 
 **抓取和搜索**：网址 → 正文（`web_fetch`），Tavily 的搜索、取页、爬站、站内地图（`web_search`、`web_crawl`、`web_map`），报价和用量。全部在本机做（站主定），真实网页和真跑 Tavily 都过了一遍。设计见 `docs/design.md` §1–§3、§5，选型 `docs/decisions/0006`、`0007`，接线 `docs/toolkit.md`。

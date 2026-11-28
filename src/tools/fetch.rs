@@ -174,7 +174,7 @@ fn by_tavily(
     let reply = client
         .extract(&[url.to_string()], depth(args), ctx.cancel)
         .map_err(tool_error)?;
-    let used = usage(reply.credits, quote, ctx);
+    let used = usage(web, reply.credits, quote, ctx);
     let Some(page) = reply
         .value
         .pages
